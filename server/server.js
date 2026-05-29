@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { verifyToken, authorizeRoles } from './middleware/authMiddleware.js';
 import authRoutes from './routes/authRoutes.js';
 import workspaceRoutes from './routes/workspaceRoute.js';
+import taskRoutes from './routes/taskRoute.js';
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/workspace', workspaceRoutes);
+app.use('/api/task', taskRoutes);
 
 app.get('/api/test', verifyToken, authorizeRoles('Admin'), (req, res) => {
   const request = req.user;
