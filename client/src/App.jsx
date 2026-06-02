@@ -3,6 +3,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard.jsx';
 import Register from './pages/Register.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
+import Workspaces from './pages/Workspaces.jsx';
+import WorkspaceDetails from './pages/WorkspaceDetails.jsx';
 
 const App = () => {
   return (
@@ -12,15 +14,23 @@ const App = () => {
           path='/login'
           element={<Login />}
         />
-         <Route
+        <Route
           path='/register'
           element={<Register />}
         />
-        <Route element={<ProtectedRoute/>}>
-        <Route
-          path='/dashboard'
-          element={<Dashboard />}
-        />
+        <Route element={<ProtectedRoute />}>
+          <Route
+            path='/dashboard'
+            element={<Dashboard />}
+          />
+          <Route
+            path='/workspaces'
+            element={<Workspaces />}
+          />
+          <Route
+            path='/workspaces/:workspaceId'
+            element={<WorkspaceDetails />}
+          />
         </Route>
       </Routes>
     </BrowserRouter>

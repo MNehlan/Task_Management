@@ -1,0 +1,108 @@
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import api from '../api/api.js';
+
+const WorkspaceDetails = () => {
+  const { workspaceId } = useParams();
+
+  const [workspace, setWorkspace] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [tasks, setTasks] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fetchWorkspaceData = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      const [workspaceRes, membersRes, tasksRes] = await Promise.all([
+        api.get(`/workspace/${workspaceId}`),
+        api.get(`/workspace/${workspaceId}/members`),
+        api.get(`/task/workspace/${workspaceId}`),
+      ]);
+
+      setWorkspace(workspaceRes.data.workspace);
+      setMembers(membersRes.data.members);
+      setTasks(tasksRes.data.tasks);
+    } catch (error) {
+      setError(
+        error.response?.data?.message ||
+          'Failed to load workspace data'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWorkspaceData();
+  }, [workspaceId]);
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (error) {
+    return <p>{error}</p>;
+  }
+
+  return (
+    <div>
+      <section>
+        <h1>{workspace.name}</h1>
+        <p>{workspace.description}</p>
+      </section>
+
+      <section>
+        <h2>Members ({members.length})</h2>
+
+        {members.length === 0 ? (
+          <p>No members found</p>
+        ) : (
+          members.map((member) => (
+            <div key={member._id}>
+              <p>{member.name}</p>
+              <p>{member.email}</p>
+              <p>{member.role}</p>
+            </div>
+          ))
+        )}
+      </section>
+
+      <section>
+        <h2>Tasks ({tasks.length})</h2>
+
+        {tasks.length === 0 ? (
+          <p>No tasks found</p>
+        ) : (
+          tasks.map((task) => (
+            <div key={task.id}>
+              <h3>{task.title}</h3>
+
+              <p>{task.description}</p>
+
+              <p>
+                <strong>Priority:</strong> {task.priority}
+              </p>
+
+              <p>
+                <strong>Status:</strong> {task.status}
+              </p>
+
+              <p>
+                <strong>Deadline:</strong>{' '}
+                {task.deadline
+                  ? new Date(task.deadline).toLocaleDateString()
+                  : 'No deadline'}
+              </p>
+            </div>
+          ))
+        )}
+      </section>
+    </div>
+  );
+};
+
+export default WorkspaceDetails;
