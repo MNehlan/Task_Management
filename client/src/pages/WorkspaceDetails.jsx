@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../api/api.js';
+import TaskForm from './TaskForm.jsx';
 
 const WorkspaceDetails = () => {
   const { workspaceId } = useParams();
@@ -29,7 +30,7 @@ const WorkspaceDetails = () => {
     } catch (error) {
       setError(
         error.response?.data?.message ||
-          'Failed to load workspace data'
+        'Failed to load workspace data'
       );
     } finally {
       setLoading(false);
@@ -101,6 +102,7 @@ const WorkspaceDetails = () => {
           ))
         )}
       </section>
+      <TaskForm members={members} fetchWorkspaceData={fetchWorkspaceData}/>
     </div>
   );
 };
