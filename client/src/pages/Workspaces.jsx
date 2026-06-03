@@ -16,6 +16,14 @@ const Workspaces = () => {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
 
+  const user = JSON.parse(
+    localStorage.getItem('user') || 'null'
+  );
+  
+  const canManageWorkspace =
+    user?.role === 'admin' ||
+    user?.role === 'manager'
+
   const handleChange = (e) => {
     setWorkspaceForm((prev) => ({
       ...prev,
@@ -74,46 +82,43 @@ const Workspaces = () => {
 
   if (error) return <p>{error}</p>;
 
-  if (!workspaces.length) {
-    return <p>No workspaces found</p>;
-  }
-
   return (
     <div>
-      <section>
-        <h2>Create Workspace</h2>
+      {canManageWorkspace && (
+        <section>
+          <h2>Create Workspace</h2>
 
-        {createError && (
-          <p>{createError}</p>
-        )}
+          {createError && (
+            <p>{createError}</p>
+          )}
 
-        <form onSubmit={handleCreateWorkspace}>
-          <input
-            type="text"
-            name="name"
-            placeholder="Workspace Name"
-            value={workspaceForm.name}
-            onChange={handleChange}
-          />
+          <form onSubmit={handleCreateWorkspace}>
+            <input
+              type="text"
+              name="name"
+              placeholder="Workspace Name"
+              value={workspaceForm.name}
+              onChange={handleChange}
+            />
 
-          <textarea
-            name="description"
-            placeholder="Workspace Description"
-            value={workspaceForm.description}
-            onChange={handleChange}
-          />
+            <textarea
+              name="description"
+              placeholder="Workspace Description"
+              value={workspaceForm.description}
+              onChange={handleChange}
+            />
 
-          <button
-            type="submit"
-            disabled={creating}
-          >
-            {creating
-              ? 'Creating...'
-              : 'Create Workspace'}
-          </button>
-        </form>
-      </section>
-
+            <button
+              type="submit"
+              disabled={creating}
+            >
+              {creating
+                ? 'Creating...'
+                : 'Create Workspace'}
+            </button>
+          </form>
+        </section>
+      )}
       <div>
         {workspaces.length === 0 ? (
           <p>No workspaces found</p>

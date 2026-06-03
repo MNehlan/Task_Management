@@ -20,6 +20,14 @@ const WorkspaceDetails = () => {
   const [addingMember, setAddingMember] = useState(false);
   const [memberError, setMemberError] = useState('');
 
+  const user = JSON.parse(
+    localStorage.getItem('user') || 'null'
+  );
+
+  const canManageWorkspace =
+    user?.role === 'admin' ||
+    workspace?.owner === user?.id;
+
   const fetchWorkspaceData = async () => {
     try {
       setLoading(true);
@@ -199,11 +207,13 @@ const WorkspaceDetails = () => {
     <div>
       <section>
         <h1>{workspace.name}</h1>
-        <button
-          onClick={handleDeleteWorkspace}
-        >
-          Delete Workspace
-        </button>
+        {canManageWorkspace && (
+          <button
+            onClick={handleDeleteWorkspace}
+          >
+            Delete Workspace
+          </button>
+        )}
         <button
           onClick={handleLeaveWorkspace}
         >
@@ -211,35 +221,36 @@ const WorkspaceDetails = () => {
         </button>
         <p>{workspace.description}</p>
       </section>
+      {canManageWorkspace && (
+        <section>
+          <h2>Add Member</h2>
 
-      <section>
-        <h2>Add Member</h2>
+          {memberError && (
+            <p>{memberError}</p>
+          )}
 
-        {memberError && (
-          <p>{memberError}</p>
-        )}
+          <form onSubmit={handleAddMember}>
+            <input
+              type="email"
+              placeholder="Enter user email"
+              value={memberEmail}
+              onChange={(e) =>
+                setMemberEmail(e.target.value)
+              }
+            />
 
-        <form onSubmit={handleAddMember}>
-          <input
-            type="email"
-            placeholder="Enter user email"
-            value={memberEmail}
-            onChange={(e) =>
-              setMemberEmail(e.target.value)
-            }
-          />
-
-          <button
-            type="submit"
-            disabled={addingMember}
-          >
-            {addingMember
-              ? 'Adding...'
-              : 'Add Member'}
-          </button>
-        </form>
-      </section>
-
+            <button
+              type="submit"
+              disabled={addingMember}
+            >
+              {addingMember
+                ? 'Adding...'
+                : 'Add Member'}
+            </button>
+          </form>
+        </section>
+      )
+      }
       <section>
         <h2>Members ({members.length})</h2>
 
@@ -251,15 +262,16 @@ const WorkspaceDetails = () => {
               <p>{member.name}</p>
               <p>{member.email}</p>
               <p>{member.role}</p>
-
-              {member._id !== workspace.owner && (
-                <button
-                  onClick={() =>
-                    handleRemoveMember(member._id)
-                  }
-                >
-                  Remove
-                </button>
+              {canManageWorkspace && (
+                member._id !== workspace.owner && (
+                  <button
+                    onClick={() =>
+                      handleRemoveMember(member._id)
+                    }
+                  >
+                    Remove
+                  </button>
+                )
               )}
             </div>
           ))
@@ -307,18 +319,28 @@ const WorkspaceDetails = () => {
                   ? new Date(task.deadline).toLocaleDateString()
                   : 'No deadline'}
               </p>
-              <p><button onClick={() => handleEditTask(task)}>Edit</button></p>
-              <p><button onClick={() => handleDeleteTask(task.id)}>Delete</button></p>
+              {canManageWorkspace && (
+                <div>
+                  <p>
+                    <button onClick={() => handleEditTask(task)}>Edit</button>
+                  </p>
+                  <p>
+                    <button onClick={() => handleDeleteTask(task.id)}>Delete</button>
+                  </p>
+                </div>
+              )}
             </div>
           ))
         )}
       </section>
-      <TaskForm
-        members={members}
-        fetchWorkspaceData={fetchWorkspaceData}
-        editingTask={editingTask}
-        setEditingTask={setEditingTask}
-      />    </div>
+      {canManageWorkspace && (
+        <TaskForm
+          members={members}
+          fetchWorkspaceData={fetchWorkspaceData}
+          editingTask={editingTask}
+          setEditingTask={setEditingTask}
+        />)}
+    </div >
   );
 };
 

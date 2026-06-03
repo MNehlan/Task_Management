@@ -38,11 +38,16 @@ const Register = () => {
         data.token
       );
 
+      localStorage.setItem(
+        'user',
+        JSON.stringify(data.user)
+      );
+
       navigate('/dashboard');
     } catch (error) {
       setError(
         error.response?.data?.message ||
-          'Registration failed'
+        'Registration failed'
       );
     } finally {
       setLoading(false);

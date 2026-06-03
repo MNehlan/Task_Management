@@ -22,7 +22,7 @@ export const verifyToken = (req, res, next) => {
 export const authorizeRoles = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      res.status(401).json({ success: false, message: 'Access Denied' });
+      return res.status(401).json({ success: false, message: 'Access Denied' });
     }
     next();
   };

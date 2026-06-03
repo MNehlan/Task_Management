@@ -37,11 +37,16 @@ const Login = () => {
         data.token
       );
 
+      localStorage.setItem(
+        'user',
+        JSON.stringify(data.user)
+      );
+
       navigate('/dashboard');
     } catch (error) {
       setError(
         error.response?.data?.message ||
-          'Login failed'
+        'Login failed'
       );
     } finally {
       setLoading(false);
