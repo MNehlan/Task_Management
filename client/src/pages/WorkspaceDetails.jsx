@@ -37,6 +37,18 @@ const WorkspaceDetails = () => {
     }
   };
 
+  const updateStatus = async (taskId, status) => {
+    try {
+      await api.patch(`/task/${taskId}`, { status });
+      fetchWorkspaceData();
+    } catch (error) {
+      setError(
+        error.response?.data?.message ||
+        'Failed to change task status'
+      );
+    }
+  }
+
   useEffect(() => {
     fetchWorkspaceData();
   }, [workspaceId]);
@@ -89,7 +101,17 @@ const WorkspaceDetails = () => {
               </p>
 
               <p>
-                <strong>Status:</strong> {task.status}
+                <strong>Status:</strong> <select
+                  value={task.status}
+                  onChange={(e) =>
+                    updateStatus(task.id, e.target.value)
+                  }
+                >
+                  <option>Todo</option>
+                  <option>In Progress</option>
+                  <option>Review</option>
+                  <option>Completed</option>
+                </select>
               </p>
 
               <p>
@@ -102,7 +124,7 @@ const WorkspaceDetails = () => {
           ))
         )}
       </section>
-      <TaskForm members={members} fetchWorkspaceData={fetchWorkspaceData}/>
+      <TaskForm members={members} fetchWorkspaceData={fetchWorkspaceData} />
     </div>
   );
 };
