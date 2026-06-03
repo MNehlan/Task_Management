@@ -56,7 +56,23 @@ const WorkspaceDetails = () => {
   }
 
   const handleDeleteTask = async (taskId) => {
+    const confirmed = window.confirm(
+      'Remove this member?'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
     try {
+      const confirmed = window.confirm(
+        'Remove this member?'
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
       await api.delete(`/task/${taskId}`);
       await fetchWorkspaceData();
     } catch (error) {
@@ -95,6 +111,29 @@ const WorkspaceDetails = () => {
       );
     } finally {
       setAddingMember(false);
+    }
+  };
+
+  const handleRemoveMember = async (userId) => {
+    const confirmed = window.confirm(
+      'Remove this member?'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await api.delete(
+        `/workspace/${workspaceId}/members/${userId}`
+      );
+
+      await fetchWorkspaceData();
+    } catch (error) {
+      setError(
+        error.response?.data?.message ||
+        'Failed to remove member'
+      );
     }
   };
 
@@ -156,6 +195,16 @@ const WorkspaceDetails = () => {
               <p>{member.name}</p>
               <p>{member.email}</p>
               <p>{member.role}</p>
+
+              {member._id !== workspace.owner && (
+                <button
+                  onClick={() =>
+                    handleRemoveMember(member._id)
+                  }
+                >
+                  Remove
+                </button>
+              )}
             </div>
           ))
         )}
