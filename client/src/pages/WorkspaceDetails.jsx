@@ -40,11 +40,23 @@ const WorkspaceDetails = () => {
   const updateStatus = async (taskId, status) => {
     try {
       await api.patch(`/task/${taskId}`, { status });
-      fetchWorkspaceData();
+      await fetchWorkspaceData();
     } catch (error) {
       setError(
         error.response?.data?.message ||
         'Failed to change task status'
+      );
+    }
+  }
+
+  const handleDeleteTask = async (taskId) => {
+    try {
+      await api.delete(`/task/${taskId}`);
+      await fetchWorkspaceData();
+    } catch (error) {
+      setError(
+        error.response?.data?.message ||
+        'Failed to delete task'
       );
     }
   }
@@ -120,6 +132,7 @@ const WorkspaceDetails = () => {
                   ? new Date(task.deadline).toLocaleDateString()
                   : 'No deadline'}
               </p>
+              <p><button onClick={() => handleDeleteTask(task.id)}>Delete</button></p>
             </div>
           ))
         )}
