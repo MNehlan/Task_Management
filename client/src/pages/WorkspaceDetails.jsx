@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api/api.js';
 import TaskForm from './TaskForm.jsx';
 
 const WorkspaceDetails = () => {
   const { workspaceId } = useParams();
+  const navigate = useNavigate();
 
   const [workspace, setWorkspace] = useState(null);
   const [members, setMembers] = useState([]);
@@ -137,6 +138,51 @@ const WorkspaceDetails = () => {
     }
   };
 
+  const handleLeaveWorkspace = async () => {
+    const confirmed =
+      window.confirm(
+        'Leave this workspace?'
+      );
+
+    if (!confirmed) return;
+
+    try {
+      await api.delete(
+        `/workspace/${workspaceId}/leave`
+      );
+
+      navigate('/workspaces');
+    } catch (error) {
+      setError(
+        error.response?.data?.message ||
+        'Failed to leave workspace'
+      );
+    }
+  };
+
+  const handleDeleteWorkspace = async () => {
+    const confirmed = window.confirm(
+      'Delete this workspace?'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await api.delete(
+        `/workspace/${workspaceId}`
+      );
+
+      navigate('/workspaces');
+    } catch (error) {
+      setError(
+        error.response?.data?.message ||
+        'Failed to delete workspace'
+      );
+    }
+  };
+
   useEffect(() => {
     fetchWorkspaceData();
   }, [workspaceId]);
@@ -153,6 +199,16 @@ const WorkspaceDetails = () => {
     <div>
       <section>
         <h1>{workspace.name}</h1>
+        <button
+          onClick={handleDeleteWorkspace}
+        >
+          Delete Workspace
+        </button>
+        <button
+          onClick={handleLeaveWorkspace}
+        >
+          Leave Workspace
+        </button>
         <p>{workspace.description}</p>
       </section>
 

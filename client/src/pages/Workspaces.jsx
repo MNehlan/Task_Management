@@ -8,9 +8,49 @@ const Workspaces = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const [memberEmail, setMemberEmail] = useState('');
-  const [addingMember, setAddingMember] = useState(false);
-  const [memberError, setMemberError] = useState('');
+  const [workspaceForm, setWorkspaceForm] = useState({
+    name: '',
+    description: '',
+  });
+
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
+
+  const handleChange = (e) => {
+    setWorkspaceForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleCreateWorkspace = async (e) => {
+    e.preventDefault();
+
+    try {
+      setCreating(true);
+      setCreateError('');
+
+      await api.post(
+        '/workspace/create',
+        workspaceForm
+      );
+
+      setWorkspaceForm({
+        name: '',
+        description: '',
+      });
+
+      await fetchWorkspaces();
+    } catch (error) {
+      setCreateError(
+        error.response?.data?.message ||
+        'Failed to create workspace'
+      );
+    } finally {
+      setCreating(false);
+    }
+  };
+
 
   const fetchWorkspaces = async () => {
     try {
@@ -23,33 +63,6 @@ const Workspaces = () => {
       setError(error.response?.data?.message || 'Failed to load workspaces');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleAddMember = async (e) => {
-    e.preventDefault();
-
-    try {
-      setAddingMember(true);
-      setMemberError('');
-
-      await api.post(
-        `/workspace/${workspaceId}/members`,
-        {
-          email: memberEmail,
-        }
-      );
-
-      setMemberEmail('');
-
-      await fetchWorkspaceData();
-    } catch (error) {
-      setMemberError(
-        error.response?.data?.message ||
-        'Failed to add member'
-      );
-    } finally {
-      setAddingMember(false);
     }
   };
 
@@ -67,17 +80,57 @@ const Workspaces = () => {
 
   return (
     <div>
-      {workspaces.map((workspace) => (
-        <div
-          key={workspace._id}
-          onClick={() => navigate(`/workspaces/${workspace._id}`)}
-        >
-          <div key={workspace._id}>
-            <h2>{workspace.name}</h2>
-            <p>{workspace.description}</p>
-          </div>
-        </div>
-      ))}
+      <section>
+        <h2>Create Workspace</h2>
+
+        {createError && (
+          <p>{createError}</p>
+        )}
+
+        <form onSubmit={handleCreateWorkspace}>
+          <input
+            type="text"
+            name="name"
+            placeholder="Workspace Name"
+            value={workspaceForm.name}
+            onChange={handleChange}
+          />
+
+          <textarea
+            name="description"
+            placeholder="Workspace Description"
+            value={workspaceForm.description}
+            onChange={handleChange}
+          />
+
+          <button
+            type="submit"
+            disabled={creating}
+          >
+            {creating
+              ? 'Creating...'
+              : 'Create Workspace'}
+          </button>
+        </form>
+      </section>
+
+      <div>
+        {workspaces.length === 0 ? (
+          <p>No workspaces found</p>
+        ) :
+          (
+            workspaces.map((workspace) => (
+              <div
+                key={workspace._id}
+                onClick={() => navigate(`/workspaces/${workspace._id}`)}
+              >
+                <h2>{workspace.name}</h2>
+                <p>{workspace.description}</p>
+              </div>
+            ))
+          )
+        }
+      </div>
     </div>
   );
 };
