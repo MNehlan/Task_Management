@@ -15,6 +15,10 @@ const WorkspaceDetails = () => {
 
   const [editingTask, setEditingTask] = useState(null)
 
+  const [memberEmail, setMemberEmail] = useState('');
+  const [addingMember, setAddingMember] = useState(false);
+  const [memberError, setMemberError] = useState('');
+
   const fetchWorkspaceData = async () => {
     try {
       setLoading(true);
@@ -67,6 +71,33 @@ const WorkspaceDetails = () => {
     setEditingTask(task);
   };
 
+  const handleAddMember = async (e) => {
+    e.preventDefault();
+
+    try {
+      setAddingMember(true);
+      setMemberError('');
+
+      await api.post(
+        `/workspace/${workspaceId}/members`,
+        {
+          email: memberEmail,
+        }
+      );
+
+      setMemberEmail('');
+
+      await fetchWorkspaceData();
+    } catch (error) {
+      setMemberError(
+        error.response?.data?.message ||
+        'Failed to add member'
+      );
+    } finally {
+      setAddingMember(false);
+    }
+  };
+
   useEffect(() => {
     fetchWorkspaceData();
   }, [workspaceId]);
@@ -84,6 +115,34 @@ const WorkspaceDetails = () => {
       <section>
         <h1>{workspace.name}</h1>
         <p>{workspace.description}</p>
+      </section>
+
+      <section>
+        <h2>Add Member</h2>
+
+        {memberError && (
+          <p>{memberError}</p>
+        )}
+
+        <form onSubmit={handleAddMember}>
+          <input
+            type="email"
+            placeholder="Enter user email"
+            value={memberEmail}
+            onChange={(e) =>
+              setMemberEmail(e.target.value)
+            }
+          />
+
+          <button
+            type="submit"
+            disabled={addingMember}
+          >
+            {addingMember
+              ? 'Adding...'
+              : 'Add Member'}
+          </button>
+        </form>
       </section>
 
       <section>

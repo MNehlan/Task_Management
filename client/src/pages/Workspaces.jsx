@@ -8,6 +8,10 @@ const Workspaces = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  const [memberEmail, setMemberEmail] = useState('');
+  const [addingMember, setAddingMember] = useState(false);
+  const [memberError, setMemberError] = useState('');
+
   const fetchWorkspaces = async () => {
     try {
       setLoading(true);
@@ -19,6 +23,33 @@ const Workspaces = () => {
       setError(error.response?.data?.message || 'Failed to load workspaces');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddMember = async (e) => {
+    e.preventDefault();
+
+    try {
+      setAddingMember(true);
+      setMemberError('');
+
+      await api.post(
+        `/workspace/${workspaceId}/members`,
+        {
+          email: memberEmail,
+        }
+      );
+
+      setMemberEmail('');
+
+      await fetchWorkspaceData();
+    } catch (error) {
+      setMemberError(
+        error.response?.data?.message ||
+        'Failed to add member'
+      );
+    } finally {
+      setAddingMember(false);
     }
   };
 
