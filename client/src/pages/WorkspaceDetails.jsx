@@ -13,6 +13,8 @@ const WorkspaceDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const [editingTask, setEditingTask] = useState(null)
+
   const fetchWorkspaceData = async () => {
     try {
       setLoading(true);
@@ -60,6 +62,10 @@ const WorkspaceDetails = () => {
       );
     }
   }
+
+  const handleEditTask = (task) => {
+    setEditingTask(task);
+  };
 
   useEffect(() => {
     fetchWorkspaceData();
@@ -109,6 +115,11 @@ const WorkspaceDetails = () => {
               <p>{task.description}</p>
 
               <p>
+                <strong>Assigned To:</strong>{' '}
+                {task.assignedTo?.name || 'Unassigned'}
+              </p>
+
+              <p>
                 <strong>Priority:</strong> {task.priority}
               </p>
 
@@ -132,13 +143,18 @@ const WorkspaceDetails = () => {
                   ? new Date(task.deadline).toLocaleDateString()
                   : 'No deadline'}
               </p>
+              <p><button onClick={() => handleEditTask(task)}>Edit</button></p>
               <p><button onClick={() => handleDeleteTask(task.id)}>Delete</button></p>
             </div>
           ))
         )}
       </section>
-      <TaskForm members={members} fetchWorkspaceData={fetchWorkspaceData} />
-    </div>
+      <TaskForm
+        members={members}
+        fetchWorkspaceData={fetchWorkspaceData}
+        editingTask={editingTask}
+        setEditingTask={setEditingTask}
+      />    </div>
   );
 };
 

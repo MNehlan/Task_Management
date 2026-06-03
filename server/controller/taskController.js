@@ -31,6 +31,12 @@ export const createTask = async (req, res) => {
         .json({ success: false, message: 'Workspace does not exist' });
     }
 
+    const canCreate =
+      req.user.role === 'admin' || workspace.owner?.toString() === req.user.id;
+    if (!canCreate) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
     if (assignedTo) {
       const user = await User.findById(assignedTo);
 
@@ -93,10 +99,11 @@ export const getTaskByWorkspace = async (req, res) => {
       }
     }
 
-    const tasks = await Task.find({ workspace: workspaceId }).populate(
-      'workspace',
-      'name description',
-    );
+    const tasks = await Task.find({
+      workspace: workspaceId,
+    })
+      .populate('workspace', 'name description')
+      .populate('assignedTo', 'name email');
 
     const formattedTasks = tasks.map((task) => ({
       id: task._id,
@@ -104,13 +111,22 @@ export const getTaskByWorkspace = async (req, res) => {
       description: task.description,
       priority: task.priority,
       deadline: task.deadline,
+      status: task.status,
+
+      assignedTo: task.assignedTo
+        ? {
+            id: task.assignedTo._id,
+            name: task.assignedTo.name,
+            email: task.assignedTo.email,
+          }
+        : null,
+
       workspace: {
         name: task.workspace.name,
         description: task.workspace.description,
       },
-      status: task.status,
     }));
-
+    
     res.status(200).json({
       success: true,
       tasks: formattedTasks,
@@ -377,7 +393,7 @@ export const updateTask = async (req, res) => {
     res.status(200).json({
       success: true,
 
-      task: {
+      tasks: {
         id: task._id,
 
         title: task.title,

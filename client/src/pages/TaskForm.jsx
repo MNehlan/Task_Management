@@ -1,8 +1,8 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams } from "react-router-dom";
 import api from "../api/api.js"
 
-const TaskForm = ({ members, fetchWorkspaceData }) => {
+const TaskForm = ({ members, fetchWorkspaceData, setEditingTask, editingTask }) => {
   const { workspaceId } = useParams()
   const [taskForm, setTaskForm] = useState({
     title: '',
@@ -23,14 +23,26 @@ const TaskForm = ({ members, fetchWorkspaceData }) => {
     }));
   };
 
-  const handleCreateTask = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
 
+    try {
       setCreating(true);
       setCreateError('');
 
-      await api.post('/task/create', taskForm);
+      if (editingTask) {
+        await api.put(
+          `/task/${editingTask.id}`,
+          taskForm
+        );
+
+        setEditingTask(null);
+      } else {
+        await api.post(
+          '/task/create',
+          taskForm
+        );
+      }
 
       setTaskForm({
         title: '',
@@ -41,21 +53,36 @@ const TaskForm = ({ members, fetchWorkspaceData }) => {
         assignedTo: '',
       });
 
-      await fetchWorkspaceData()
+      await fetchWorkspaceData();
     } catch (error) {
       setCreateError(
         error.response?.data?.message ||
-        'Failed to create task'
+        'Operation failed'
       );
     } finally {
       setCreating(false);
     }
-  }
+  };
 
+  useEffect(() => {
+    if (editingTask) {
+      setTaskForm({
+        title: editingTask.title,
+        description: editingTask.description,
+        priority: editingTask.priority,
+        deadline:
+          editingTask.deadline?.split('T')[0] ||
+          '',
+        workspaceId,
+        assignedTo:
+          editingTask.assignedTo?.id || '',
+      });
+    }
+  }, [editingTask, workspaceId]);
 
   return (
     <>
-      <form onSubmit={handleCreateTask}>
+      <form onSubmit={handleSubmit}>
         <p>{createError}</p>
         <input
           type="text"
@@ -108,13 +135,37 @@ const TaskForm = ({ members, fetchWorkspaceData }) => {
           ))}
         </select>
 
+        {editingTask && (
+          <button
+            type="button"
+            onClick={() => {
+              setEditingTask(null);
+
+              setTaskForm({
+                title: '',
+                description: '',
+                priority: 'Medium',
+                deadline: '',
+                workspaceId,
+                assignedTo: '',
+              });
+            }}
+          >
+            Cancel Edit
+          </button>
+        )}
+
         <button
           type="submit"
           disabled={creating}
         >
           {creating
-            ? 'Creating...'
-            : 'Create Task'}
+            ? editingTask
+              ? 'Updating...'
+              : 'Creating...'
+            : editingTask
+              ? 'Update Task'
+              : 'Create Task'}
         </button>
       </form>
     </>
