@@ -30,17 +30,25 @@ const TaskForm = ({ members, fetchWorkspaceData, setEditingTask, editingTask }) 
       setCreating(true);
       setCreateError('');
 
+      const taskData = {
+        ...taskForm,
+        assignedTo:
+          taskForm.assignedTo || undefined,
+      };
+
+
       if (editingTask) {
+
         await api.put(
           `/task/${editingTask.id}`,
-          taskForm
+          taskData
         );
 
         setEditingTask(null);
       } else {
         await api.post(
           '/task/create',
-          taskForm
+          taskData
         );
       }
 

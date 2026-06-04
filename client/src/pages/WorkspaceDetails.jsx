@@ -66,7 +66,7 @@ const WorkspaceDetails = () => {
 
   const handleDeleteTask = async (taskId) => {
     const confirmed = window.confirm(
-      'Remove this member?'
+      'Remove this task?'
     );
 
     if (!confirmed) {
@@ -74,14 +74,6 @@ const WorkspaceDetails = () => {
     }
 
     try {
-      const confirmed = window.confirm(
-        'Remove this member?'
-      );
-
-      if (!confirmed) {
-        return;
-      }
-
       await api.delete(`/task/${taskId}`);
       await fetchWorkspaceData();
     } catch (error) {
