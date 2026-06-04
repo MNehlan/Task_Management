@@ -89,28 +89,63 @@ const TaskForm = ({ members, fetchWorkspaceData, setEditingTask, editingTask }) 
   }, [editingTask, workspaceId]);
 
   return (
-    <>
-      <form onSubmit={handleSubmit}>
-        <p>{createError}</p>
-        <input
-          type="text"
-          name="title"
-          placeholder="Title"
-          value={taskForm.title}
-          onChange={handleChange}
-        />
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4"
+    >
+      {createError && (
+        <p className="text-red-500">
+          {createError}
+        </p>
+      )}
 
-        <textarea
-          name="description"
-          placeholder="Description"
-          value={taskForm.description}
-          onChange={handleChange}
-        />
+      <input
+        type="text"
+        name="title"
+        placeholder="Task Title"
+        value={taskForm.title}
+        onChange={handleChange}
+        className="
+          w-full
+          border
+          rounded-lg
+          p-3
+          focus:outline-none
+          focus:ring-2
+          focus:ring-blue-500
+        "
+      />
 
+      <textarea
+        name="description"
+        placeholder="Task Description"
+        value={taskForm.description}
+        onChange={handleChange}
+        rows="4"
+        className="
+          w-full
+          border
+          rounded-lg
+          p-3
+          focus:outline-none
+          focus:ring-2
+          focus:ring-blue-500
+        "
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <select
           name="priority"
           value={taskForm.priority}
           onChange={handleChange}
+          className="
+            border
+            rounded-lg
+            p-3
+            focus:outline-none
+            focus:ring-2
+            focus:ring-blue-500
+          "
         >
           <option value="Low">Low</option>
           <option value="Medium">Medium</option>
@@ -122,12 +157,28 @@ const TaskForm = ({ members, fetchWorkspaceData, setEditingTask, editingTask }) 
           name="deadline"
           value={taskForm.deadline}
           onChange={handleChange}
+          className="
+            border
+            rounded-lg
+            p-3
+            focus:outline-none
+            focus:ring-2
+            focus:ring-blue-500
+          "
         />
 
         <select
           name="assignedTo"
           value={taskForm.assignedTo}
           onChange={handleChange}
+          className="
+            border
+            rounded-lg
+            p-3
+            focus:outline-none
+            focus:ring-2
+            focus:ring-blue-500
+          "
         >
           <option value="">
             Select Member
@@ -142,7 +193,9 @@ const TaskForm = ({ members, fetchWorkspaceData, setEditingTask, editingTask }) 
             </option>
           ))}
         </select>
+      </div>
 
+      <div className="flex gap-3">
         {editingTask && (
           <button
             type="button"
@@ -158,6 +211,14 @@ const TaskForm = ({ members, fetchWorkspaceData, setEditingTask, editingTask }) 
                 assignedTo: '',
               });
             }}
+            className="
+              bg-gray-500
+              text-white
+              px-4
+              py-2
+              rounded-lg
+              hover:bg-gray-600
+            "
           >
             Cancel Edit
           </button>
@@ -166,6 +227,15 @@ const TaskForm = ({ members, fetchWorkspaceData, setEditingTask, editingTask }) 
         <button
           type="submit"
           disabled={creating}
+          className="
+            bg-blue-600
+            text-white
+            px-4
+            py-2
+            rounded-lg
+            hover:bg-blue-700
+            disabled:opacity-50
+          "
         >
           {creating
             ? editingTask
@@ -175,9 +245,9 @@ const TaskForm = ({ members, fetchWorkspaceData, setEditingTask, editingTask }) 
               ? 'Update Task'
               : 'Create Task'}
         </button>
-      </form>
-    </>
-  )
+      </div>
+    </form>
+  );
 }
 
 export default TaskForm
