@@ -29,34 +29,41 @@ const Dashboard = () => {
     return <div>Loading..</div>
   }
 
+  if (error) {
+    return <div>{error}</div>
+  }
+
+  const cards = [
+    { title: 'Workspaces', value: stats.workspaces },
+    { title: 'Tasks', value: stats.tasks },
+    { title: 'Todo', value: stats.todo },
+    { title: 'Review', value: stats.review },
+    { title: 'In Progress', value: stats.inProgress },
+    { title: 'Completed', value: stats.completed },
+  ];
+
   return (
-    <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
-      <div>
-        <p>Workspaces</p>
-        <p>{stats.workspaces}</p>
-      </div>
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-6">
+        Dashboard
+      </h1>
 
-      <div>
-        <p>Tasks</p>
-        <p>{stats.tasks}</p>
-      </div>
-      <div>
-        <p>Todo</p>
-        <p>{stats.todo}</p>
-      </div>
-      <div>
-        <p>Review</p>
-        <p>{stats.review}</p>
-      </div>
-      <div>
-        <p>In progress</p>
-        <p>{stats.inProgress}</p>
-      </div>
-      <div>
-        <p>Completed</p>
-        <p>{stats.completed}</p>
-      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {cards.map((card) => (
+          <div
+            key={card.title}
+            className="bg-white rounded-xl shadow-md p-6 border"
+          >
+            <h2 className="text-gray-500 text-sm font-medium">
+              {card.title}
+            </h2>
 
+            <p className="text-3xl font-bold mt-2">
+              {card.value}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
