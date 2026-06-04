@@ -4,17 +4,17 @@ import Sidebar from './Sidebar';
 
 const Layout = () => {
   return (
-    <>
+    <div className="min-h-screen">
       <Navbar />
 
-      <div>
+      <div className="flex">
         <Sidebar />
 
-        <main>
+        <main className="flex-1 p-6">
           <Outlet />
         </main>
       </div>
-    </>
+    </div>
   );
 };
 
