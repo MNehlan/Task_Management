@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -15,14 +15,21 @@ const Navbar = () => {
   };
 
   return (
-    <nav>
-      <h1>Task Manager</h1>
+    <nav className="h-16 border-b bg-white flex items-center justify-between px-6">
+      <h1 className="font-bold text-xl">
+        <Link to={'/dashboard'}>Task Manager</Link>
+      </h1>
 
-      <span>{user?.name}</span>
+      <div className="flex items-center gap-4">
+        <span>{user?.name}</span>
 
-      <button onClick={handleLogout}>
-        Logout
-      </button>
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 rounded bg-red-500 text-white cursor-pointer"
+        >
+          Logout
+        </button>
+      </div>
     </nav>
   );
 };
