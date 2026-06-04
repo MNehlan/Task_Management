@@ -196,26 +196,30 @@ const WorkspaceDetails = () => {
   }
 
   return (
-    <div>
-      <section>
-        <h1>{workspace.name}</h1>
-        {canManageWorkspace && (
+    <div className="p-6">
+      <section className="bg-white rounded-xl shadow-md p-6 mb-6">
+        <h1 className="text-3xl font-bold mb-2">{workspace.name}</h1>
+        <p className="text-gray-600 mb-4">{workspace.description}</p>
+        <div className="flex gap-3">
+          {canManageWorkspace && (
+            <button
+              onClick={handleDeleteWorkspace}
+              className="bg-red-500 text-white px-4 py-2  rounded-lg hover:bg-red-600"
+            >
+              Delete Workspace
+            </button>
+          )}
           <button
-            onClick={handleDeleteWorkspace}
+            onClick={handleLeaveWorkspace}
+            className='bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900'
           >
-            Delete Workspace
+            Leave Workspace
           </button>
-        )}
-        <button
-          onClick={handleLeaveWorkspace}
-        >
-          Leave Workspace
-        </button>
-        <p>{workspace.description}</p>
+        </div>
       </section>
       {canManageWorkspace && (
-        <section>
-          <h2>Add Member</h2>
+        <section className='bg-white rounded-xl shadow-md p-6 mb-6'>
+          <h2 className='text-2xl font-bold mb-4'>Add Member</h2>
 
           {memberError && (
             <p>{memberError}</p>
@@ -229,11 +233,13 @@ const WorkspaceDetails = () => {
               onChange={(e) =>
                 setMemberEmail(e.target.value)
               }
+              className='w-full border rounded-lg p-3 mb-4'
             />
 
             <button
               type="submit"
               disabled={addingMember}
+              className='bg-blue-600 text-white px-4 py-2 rounded-lg'
             >
               {addingMember
                 ? 'Adding...'
@@ -243,82 +249,108 @@ const WorkspaceDetails = () => {
         </section>
       )
       }
-      <section>
-        <h2>Members ({members.length})</h2>
+      <section className="bg-white rounded-xl shadow-md p-6 mb-6">
+        <h2 className='text-2xl font-bold mb-4'>Members ({members.length})</h2>
 
         {members.length === 0 ? (
-          <p>No members found</p>
+          <p className='text-gray-600 mb-4'>No members found</p>
         ) : (
           members.map((member) => (
-            <div key={member._id}>
-              <p>{member.name}</p>
-              <p>{member.email}</p>
-              <p>{member.role}</p>
-              {canManageWorkspace && (
-                member._id !== workspace.owner && (
-                  <button
-                    onClick={() =>
-                      handleRemoveMember(member._id)
-                    }
-                  >
-                    Remove
-                  </button>
-                )
-              )}
+            <div key={member._id}
+              className='grid grid-cols-[1fr_120px_120px] items-center border-b py-3'
+            >
+              <div>
+                <p className='font-medium'>{member.name}</p>
+                <p className='text-sm text-gray-500'>{member.email}</p>
+              </div>
+
+              <p className='text-sm text-black'>{member.role}</p>
+              <div className='flex justify-end'>
+                {canManageWorkspace && (
+                  member._id !== workspace.owner && (
+                    <button
+                      onClick={() =>
+                        handleRemoveMember(member._id)
+                      }
+                      className="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600"
+                    >
+                      Remove
+                    </button>
+                  )
+                )}
+              </div>
             </div>
           ))
         )}
       </section>
 
-      <section>
-        <h2>Tasks ({tasks.length})</h2>
+      <section className="mb-6">
+        <h2 className="text-2xl font-bold mb-4">
+          Tasks ({tasks.length})
+        </h2>
 
         {tasks.length === 0 ? (
           <p>No tasks found</p>
         ) : (
           tasks.map((task) => (
-            <div key={task.id}>
-              <h3>{task.title}</h3>
+            <div key={task.id}
+              className='bg-white rounded-xl shadow-md p-5 mb-4'
+            >
+              <h3 className='text-lg font-semibold'>{task.title}</h3>
 
-              <p>{task.description}</p>
+              <p className="text-gray-600 mt-2">{task.description}</p>
 
-              <p>
-                <strong>Assigned To:</strong>{' '}
-                {task.assignedTo?.name || 'Unassigned'}
-              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                <p>
+                  <strong>Assigned:</strong>{' '}
+                  {task.assignedTo?.name || 'Unassigned'}
+                </p>
 
-              <p>
-                <strong>Priority:</strong> {task.priority}
-              </p>
+                <p>
+                  <strong>Priority:</strong>{' '}
+                  {task.priority}
+                </p>
 
-              <p>
-                <strong>Status:</strong> <select
-                  value={task.status}
-                  onChange={(e) =>
-                    updateStatus(task.id, e.target.value)
-                  }
-                >
-                  <option>Todo</option>
-                  <option>In Progress</option>
-                  <option>Review</option>
-                  <option>Completed</option>
-                </select>
-              </p>
+                <p>
+                  <strong>Status:</strong>{' '}
+                  <select
+                    value={task.status}
+                    onChange={(e) =>
+                      updateStatus(
+                        task.id,
+                        e.target.value
+                      )
+                    }
+                    className="border rounded-lg px-2 py-1"
+                  >
+                    <option>Todo</option>
+                    <option>In Progress</option>
+                    <option>Review</option>
+                    <option>Completed</option>
+                  </select>
+                </p>
 
-              <p>
-                <strong>Deadline:</strong>{' '}
-                {task.deadline
-                  ? new Date(task.deadline).toLocaleDateString()
-                  : 'No deadline'}
-              </p>
+                <p>
+                  <strong>Deadline:</strong>{' '}
+                  {task.deadline
+                    ? new Date(
+                      task.deadline
+                    ).toLocaleDateString()
+                    : 'No deadline'}
+                </p>
+              </div>
               {canManageWorkspace && (
-                <div>
-                  <p>
-                    <button onClick={() => handleEditTask(task)}>Edit</button>
-                  </p>
-                  <p>
-                    <button onClick={() => handleDeleteTask(task.id)}>Delete</button>
-                  </p>
+                <div className='flex gap-2 mt-4'>
+                  <button onClick={() => handleEditTask(task)}
+                    className='bg-yellow-500 text-white px-3 py-2 rounded-lg'
+                  >
+                    Edit
+                  </button>
+                  <button onClick={() => handleDeleteTask(task.id)}
+                    className='bg-red-500 text-white px-3 py-2 rounded-lg'
+                  >
+                    Delete
+                  </button>
                 </div>
               )}
             </div>
@@ -326,12 +358,20 @@ const WorkspaceDetails = () => {
         )}
       </section>
       {canManageWorkspace && (
-        <TaskForm
-          members={members}
-          fetchWorkspaceData={fetchWorkspaceData}
-          editingTask={editingTask}
-          setEditingTask={setEditingTask}
-        />)}
+        <section className="bg-white rounded-xl shadow-md p-6 mt-6">
+          <h2 className="text-2xl font-bold mb-4">
+            {editingTask
+              ? 'Edit Task'
+              : 'Create Task'}
+          </h2>
+          <TaskForm
+            members={members}
+            fetchWorkspaceData={fetchWorkspaceData}
+            editingTask={editingTask}
+            setEditingTask={setEditingTask}
+          />
+        </section>
+      )}
     </div >
   );
 };
