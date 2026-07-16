@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/api.js';
-import { handleChange } from '../utils/handlechange.js';
+import WorkspaceCard from '../components/WorkspaceCard.jsx';
+import CreateWorkspaceForm from '../components/CreateWorkspaceForm.jsx';
 
 const Workspaces = () => {
   const [workspaces, setWorkspaces] = useState([]);
@@ -9,57 +10,17 @@ const Workspaces = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const [workspaceForm, setWorkspaceForm] = useState({
-    name: '',
-    description: '',
-  });
-
+  const [workspaceForm, setWorkspaceForm] = useState({ name: '', description: '' });
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
 
-  const user = JSON.parse(
-    localStorage.getItem('user') || 'null'
-  );
-
-  const canManageWorkspace =
-    user?.role === 'admin' ||
-    user?.role === 'manager'
-
-  const handleCreateWorkspace = async (e) => {
-    e.preventDefault();
-
-    try {
-      setCreating(true);
-      setCreateError('');
-
-      await api.post(
-        '/workspace/create',
-        workspaceForm
-      );
-
-      setWorkspaceForm({
-        name: '',
-        description: '',
-      });
-
-      await fetchWorkspaces();
-    } catch (error) {
-      setCreateError(
-        error.response?.data?.message ||
-        'Failed to create workspace'
-      );
-    } finally {
-      setCreating(false);
-    }
-  };
-
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const canManageWorkspace = user?.role === 'admin' || user?.role === 'manager';
 
   const fetchWorkspaces = async () => {
     try {
       setLoading(true);
-
       const { data } = await api.get('/workspace');
-
       setWorkspaces(data.workspaces);
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to load workspaces');
@@ -68,118 +29,82 @@ const Workspaces = () => {
     }
   };
 
+  const handleCreateWorkspace = async (e) => {
+    e.preventDefault();
+    try {
+      setCreating(true);
+      setCreateError('');
+      const { data } = await api.post('/workspace/create', workspaceForm);
+      setWorkspaces((prev) => [...prev, data.workspace]);
+      setWorkspaceForm({ name: '', description: '' });
+    } catch (error) {
+      setCreateError(error.response?.data?.message || 'Failed to create workspace');
+    } finally {
+      setCreating(false);
+    }
+  };
+
   useEffect(() => {
     fetchWorkspaces();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64 text-white/40 text-sm">
+        Loading workspaces...
+      </div>
+    );
+  }
 
-  if (error) return <p>{error}</p>;
+  if (error) {
+    return (
+      <div className="px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm max-w-md">
+        {error}
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">
-        Workspaces
-      </h1>
+    <div>
+      {/* Page header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-white">Workspaces</h1>
+        <p className="text-sm text-white/40 mt-1">
+          {workspaces.length === 0
+            ? 'No workspaces yet.'
+            : `${workspaces.length} workspace${workspaces.length !== 1 ? 's' : ''} available`}
+        </p>
+      </div>
 
+      {/* Create form — only for admin / manager */}
       {canManageWorkspace && (
-        <section className="bg-white rounded-xl shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">
-            Create Workspace
-          </h2>
-
-          {createError && (
-            <p className="text-red-500 mb-4">
-              {createError}
-            </p>
-          )}
-
-          <form
-            onSubmit={handleCreateWorkspace}
-            className="space-y-4"
-          >
-            <input
-              type="text"
-              name="name"
-              placeholder="Workspace Name"
-              value={workspaceForm.name}
-              onChange={(e) => handleChange(e, setWorkspaceForm)}
-              className="w-full border rounded-lg p-3"
-            />
-
-            <textarea
-              name="description"
-              placeholder="Workspace Description"
-              value={workspaceForm.description}
-              onChange={(e) => handleChange(e, setWorkspaceForm)}
-              className="w-full border rounded-lg p-3"
-              rows="4"
-            />
-
-            <button
-              type="submit"
-              disabled={creating}
-              className="
-                bg-blue-600
-                text-white
-                px-4
-                py-2
-                rounded-lg
-                hover:bg-blue-700
-                transition
-                disabled:opacity-50
-              "
-            >
-              {creating
-                ? 'Creating...'
-                : 'Create Workspace'}
-            </button>
-          </form>
-        </section>
+        <CreateWorkspaceForm
+          form={workspaceForm}
+          setForm={setWorkspaceForm}
+          onSubmit={handleCreateWorkspace}
+          loading={creating}
+          error={createError}
+        />
       )}
 
+      {/* Workspace grid */}
       {workspaces.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <p className="text-gray-500">
-            No workspaces found
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="text-5xl mb-4">🗂️</div>
+          <p className="text-white/40 text-sm">
+            {canManageWorkspace
+              ? 'Create your first workspace above to get started.'
+              : 'You have not been added to any workspace yet.'}
           </p>
         </div>
       ) : (
-        <div
-          className="
-            grid
-            grid-cols-1
-            md:grid-cols-2
-            lg:grid-cols-3
-            gap-6
-          "
-        >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {workspaces.map((workspace) => (
-            <div
+            <WorkspaceCard
               key={workspace._id}
-              onClick={() =>
-                navigate(
-                  `/workspaces/${workspace._id}`
-                )
-              }
-              className="
-                bg-white
-                rounded-xl
-                shadow-md
-                p-5
-                cursor-pointer
-                hover:shadow-lg
-                transition
-              "
-            >
-              <h2 className="text-xl font-semibold mb-2">
-                {workspace.name}
-              </h2>
-
-              <p className="text-gray-600">
-                {workspace.description}
-              </p>
-            </div>
+              workspace={workspace}
+              onClick={() => navigate(`/workspaces/${workspace._id}`)}
+            />
           ))}
         </div>
       )}
