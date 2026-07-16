@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api/api.js';
 import TaskForm from './TaskForm.jsx';
+import TaskCard from '../components/TaskCard.jsx';
+import MemberList from '../components/MemberList.jsx';
+import Modal from '../components/Modal.jsx';
 
 const WorkspaceDetails = () => {
   const { workspaceId } = useParams();
@@ -10,184 +13,108 @@ const WorkspaceDetails = () => {
   const [workspace, setWorkspace] = useState(null);
   const [members, setMembers] = useState([]);
   const [tasks, setTasks] = useState([]);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const [editingTask, setEditingTask] = useState(null)
+  // Modal states
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [memberModalOpen, setMemberModalOpen] = useState(false);
 
+  // Add member form
   const [memberEmail, setMemberEmail] = useState('');
   const [addingMember, setAddingMember] = useState(false);
   const [memberError, setMemberError] = useState('');
 
-  const user = JSON.parse(
-    localStorage.getItem('user') || 'null'
-  );
-
-  const canManageWorkspace =
-    user?.role === 'admin' ||
-    workspace?.owner === user?.id;
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const canManageWorkspace = user?.role === 'admin' || workspace?.owner === user?.id;
 
   const fetchWorkspaceData = async () => {
     try {
       setLoading(true);
       setError('');
-
       const [workspaceRes, membersRes, tasksRes] = await Promise.all([
         api.get(`/workspace/${workspaceId}`),
         api.get(`/workspace/${workspaceId}/members`),
         api.get(`/task/workspace/${workspaceId}`),
       ]);
-
       setWorkspace(workspaceRes.data.workspace);
       setMembers(membersRes.data.members);
       setTasks(tasksRes.data.tasks);
     } catch (error) {
-      setError(
-        error.response?.data?.message ||
-        'Failed to load workspace data'
-      );
+      setError(error.response?.data?.message || 'Failed to load workspace data');
     } finally {
       setLoading(false);
     }
   };
 
   const updateStatus = async (taskId, status) => {
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status } : t)));
     try {
-      setTasks(prev =>
-        prev.map(task =>
-          task.id === taskId
-            ? {
-              ...task, status
-            } : task
-        )
-      );
-
       await api.patch(`/task/${taskId}`, { status });
     } catch (error) {
-      setError(
-        error.response?.data?.message ||
-        'Failed to change task status'
-      );
+      setError(error.response?.data?.message || 'Failed to change task status');
     }
-  }
-
-  const handleDeleteTask = async (taskId) => {
-    const confirmed = window.confirm(
-      'Remove this task?'
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      await api.delete(`/task/${taskId}`);
-      setTasks(prev => prev.filter(task => task.id !== taskId))
-    } catch (error) {
-      setError(
-        error.response?.data?.message ||
-        'Failed to delete task'
-      );
-    }
-  }
+  };
 
   const handleEditTask = (task) => {
     setEditingTask(task);
+    setTaskModalOpen(true);
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    if (!window.confirm('Delete this task?')) return;
+    try {
+      await api.delete(`/task/${taskId}`);
+      setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to delete task');
+    }
   };
 
   const handleAddMember = async (e) => {
     e.preventDefault();
-
     try {
       setAddingMember(true);
       setMemberError('');
-
-      const response = await api.post(
-        `/workspace/${workspaceId}/members`,
-        {
-          email: memberEmail,
-        }
-      );
-
+      const response = await api.post(`/workspace/${workspaceId}/members`, { email: memberEmail });
+      setMembers((prev) => [...prev, response.data.member]);
       setMemberEmail('');
-
-      setMembers(prev => [...prev, response.data.member])
+      setMemberModalOpen(false);
     } catch (error) {
-      setMemberError(
-        error.response?.data?.message ||
-        'Failed to add member'
-      );
+      setMemberError(error.response?.data?.message || 'Failed to add member');
     } finally {
       setAddingMember(false);
     }
   };
 
   const handleRemoveMember = async (userId) => {
-    const confirmed = window.confirm(
-      'Remove this member?'
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
+    if (!window.confirm('Remove this member?')) return;
     try {
-      await api.delete(
-        `/workspace/${workspaceId}/members/${userId}`
-      );
-
-      setMembers(prev => prev.filter(member => member._id !== userId))
+      await api.delete(`/workspace/${workspaceId}/members/${userId}`);
+      setMembers((prev) => prev.filter((m) => m._id !== userId));
     } catch (error) {
-      setError(
-        error.response?.data?.message ||
-        'Failed to remove member'
-      );
+      setError(error.response?.data?.message || 'Failed to remove member');
     }
   };
 
   const handleLeaveWorkspace = async () => {
-    const confirmed =
-      window.confirm(
-        'Leave this workspace?'
-      );
-
-    if (!confirmed) return;
-
+    if (!window.confirm('Leave this workspace?')) return;
     try {
-      await api.delete(
-        `/workspace/${workspaceId}/leave`
-      );
-
+      await api.delete(`/workspace/${workspaceId}/leave`);
       navigate('/workspaces');
     } catch (error) {
-      setError(
-        error.response?.data?.message ||
-        'Failed to leave workspace'
-      );
+      setError(error.response?.data?.message || 'Failed to leave workspace');
     }
   };
 
   const handleDeleteWorkspace = async () => {
-    const confirmed = window.confirm(
-      'Delete this workspace?'
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
+    if (!window.confirm('Permanently delete this workspace?')) return;
     try {
-      await api.delete(
-        `/workspace/${workspaceId}`
-      );
-
+      await api.delete(`/workspace/${workspaceId}`);
       navigate('/workspaces');
     } catch (error) {
-      setError(
-        error.response?.data?.message ||
-        'Failed to delete workspace'
-      );
+      setError(error.response?.data?.message || 'Failed to delete workspace');
     }
   };
 
@@ -196,191 +123,168 @@ const WorkspaceDetails = () => {
   }, [workspaceId]);
 
   if (loading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="flex items-center justify-center h-64 text-white/40 text-sm">
+        Loading workspace...
+      </div>
+    );
   }
 
   if (error) {
-    return <p>{error}</p>;
+    return (
+      <div className="px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm max-w-md">
+        {error}
+      </div>
+    );
   }
 
   return (
-    <div className="p-6">
-      <section className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h1 className="text-3xl font-bold mb-2">{workspace.name}</h1>
-        <p className="text-gray-600 mb-4">{workspace.description}</p>
-        <div className="flex gap-3">
+    <div className="max-w-5xl mx-auto space-y-6">
+
+      {/* ── Workspace Header ── */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-2xl font-bold text-white">{workspace.name}</h1>
+            <p className="text-sm text-white/50 mt-1 max-w-lg">{workspace.description}</p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {canManageWorkspace && (
+              <button
+                onClick={handleDeleteWorkspace}
+                className="text-sm px-4 py-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition"
+              >
+                Delete Workspace
+              </button>
+            )}
+            <button
+              onClick={handleLeaveWorkspace}
+              className="text-sm px-4 py-2 rounded-xl border border-white/15 text-white/50 hover:bg-white/5 transition"
+            >
+              Leave
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Members Section ── */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-base font-semibold text-white">Members</h2>
+            <p className="text-xs text-white/40 mt-0.5">{members.length} member{members.length !== 1 ? 's' : ''}</p>
+          </div>
           {canManageWorkspace && (
             <button
-              onClick={handleDeleteWorkspace}
-              className="bg-red-500 text-white px-4 py-2  rounded-lg hover:bg-red-600"
+              onClick={() => { setMemberError(''); setMemberModalOpen(true); }}
+              className="text-sm px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-medium transition"
             >
-              Delete Workspace
+              + Add Member
             </button>
           )}
-          <button
-            onClick={handleLeaveWorkspace}
-            className='bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900'
-          >
-            Leave Workspace
-          </button>
         </div>
-      </section>
-      {canManageWorkspace && (
-        <section className='bg-white rounded-xl shadow-md p-6 mb-6'>
-          <h2 className='text-2xl font-bold mb-4'>Add Member</h2>
 
-          {memberError && (
-            <p>{memberError}</p>
+        <MemberList
+          members={members}
+          canManage={canManageWorkspace}
+          ownerId={workspace.owner}
+          onRemove={handleRemoveMember}
+        />
+      </div>
+
+      {/* ── Tasks Section ── */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-base font-semibold text-white">Tasks</h2>
+            <p className="text-xs text-white/40 mt-0.5">{tasks.length} task{tasks.length !== 1 ? 's' : ''}</p>
+          </div>
+          {canManageWorkspace && (
+            <button
+              onClick={() => { setEditingTask(null); setTaskModalOpen(true); }}
+              className="text-sm px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-medium transition"
+            >
+              + New Task
+            </button>
           )}
+        </div>
 
-          <form onSubmit={handleAddMember}>
-            <input
-              type="email"
-              placeholder="Enter user email"
-              value={memberEmail}
-              onChange={(e) =>
-                setMemberEmail(e.target.value)
-              }
-              className='w-full border rounded-lg p-3 mb-4'
-            />
+        {tasks.length === 0 ? (
+          <div className="flex flex-col items-center py-12 text-center">
+            <div className="text-4xl mb-3">📋</div>
+            <p className="text-sm text-white/40">No tasks yet. Create the first one.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {tasks.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                canManage={canManageWorkspace}
+                onStatusChange={updateStatus}
+                onEdit={handleEditTask}
+                onDelete={handleDeleteTask}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
+      {/* ── Task Modal (Create / Edit) ── */}
+      <Modal
+        isOpen={taskModalOpen}
+        onClose={() => { setTaskModalOpen(false); setEditingTask(null); }}
+        title={editingTask ? 'Edit Task' : 'New Task'}
+      >
+        <TaskForm
+          members={members}
+          editingTask={editingTask}
+          setEditingTask={setEditingTask}
+          setTasks={setTasks}
+          onClose={() => { setTaskModalOpen(false); setEditingTask(null); }}
+        />
+      </Modal>
+
+      {/* ── Add Member Modal ── */}
+      <Modal
+        isOpen={memberModalOpen}
+        onClose={() => setMemberModalOpen(false)}
+        title="Add Member"
+      >
+        {memberError && (
+          <div className="mb-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+            {memberError}
+          </div>
+        )}
+        <form onSubmit={handleAddMember} className="space-y-4">
+          <input
+            type="email"
+            placeholder="Enter member email"
+            value={memberEmail}
+            onChange={(e) => setMemberEmail(e.target.value)}
+            required
+            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/25 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+          />
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setMemberModalOpen(false)}
+              className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/50 text-sm hover:bg-white/5 transition"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={addingMember}
-              className='bg-blue-600 text-white px-4 py-2 rounded-lg'
+              className="flex-1 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-semibold text-sm transition"
             >
-              {addingMember
-                ? 'Adding...'
-                : 'Add Member'}
+              {addingMember ? 'Adding...' : 'Add Member'}
             </button>
-          </form>
-        </section>
-      )
-      }
-      <section className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h2 className='text-2xl font-bold mb-4'>Members ({members.length})</h2>
+          </div>
+        </form>
+      </Modal>
 
-        {members.length === 0 ? (
-          <p className='text-gray-600 mb-4'>No members found</p>
-        ) : (
-          members.map((member) => (
-            <div key={member._id}
-              className='grid grid-cols-[1fr_120px_120px] items-center border-b py-3'
-            >
-              <div>
-                <p className='font-medium'>{member.name}</p>
-                <p className='text-sm text-gray-500'>{member.email}</p>
-              </div>
-
-              <p className='text-sm text-black'>{member.role}</p>
-              <div className='flex justify-end'>
-                {canManageWorkspace && (
-                  member._id !== workspace.owner && (
-                    <button
-                      onClick={() =>
-                        handleRemoveMember(member._id)
-                      }
-                      className="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600"
-                    >
-                      Remove
-                    </button>
-                  )
-                )}
-              </div>
-            </div>
-          ))
-        )}
-      </section>
-
-      <section className="mb-6">
-        <h2 className="text-2xl font-bold mb-4">
-          Tasks ({tasks.length})
-        </h2>
-
-        {tasks.length === 0 ? (
-          <p>No tasks found</p>
-        ) : (
-          tasks.map((task) => (
-            <div key={task.id}
-              className='bg-white rounded-xl shadow-md p-5 mb-4'
-            >
-              <h3 className='text-lg font-semibold'>{task.title}</h3>
-
-              <p className="text-gray-600 mt-2">{task.description}</p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                <p>
-                  <strong>Assigned:</strong>{' '}
-                  {task.assignedTo?.name || 'Unassigned'}
-                </p>
-
-                <p>
-                  <strong>Priority:</strong>{' '}
-                  {task.priority}
-                </p>
-
-                <p>
-                  <strong>Status:</strong>{' '}
-                  <select
-                    value={task.status}
-                    onChange={(e) =>
-                      updateStatus(
-                        task.id,
-                        e.target.value
-                      )
-                    }
-                    className="border rounded-lg px-2 py-1"
-                  >
-                    <option>Todo</option>
-                    <option>In Progress</option>
-                    <option>Review</option>
-                    <option>Completed</option>
-                  </select>
-                </p>
-
-                <p>
-                  <strong>Deadline:</strong>{' '}
-                  {task.deadline
-                    ? new Date(
-                      task.deadline
-                    ).toLocaleDateString()
-                    : 'No deadline'}
-                </p>
-              </div>
-              {canManageWorkspace && (
-                <div className='flex gap-2 mt-4'>
-                  <button onClick={() => handleEditTask(task)}
-                    className='bg-yellow-500 text-white px-3 py-2 rounded-lg'
-                  >
-                    Edit
-                  </button>
-                  <button onClick={() => handleDeleteTask(task.id)}
-                    className='bg-red-500 text-white px-3 py-2 rounded-lg'
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-            </div>
-          ))
-        )}
-      </section>
-      {canManageWorkspace && (
-        <section className="bg-white rounded-xl shadow-md p-6 mt-6">
-          <h2 className="text-2xl font-bold mb-4">
-            {editingTask
-              ? 'Edit Task'
-              : 'Create Task'}
-          </h2>
-          <TaskForm
-            members={members}
-            editingTask={editingTask}
-            setEditingTask={setEditingTask}
-            setTasks={setTasks}
-          />
-        </section>
-      )}
-    </div >
+    </div>
   );
 };
 

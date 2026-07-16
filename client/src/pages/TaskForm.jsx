@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import api from "../api/api.js"
+import api from "../api/api.js";
 import { handleChange } from "../utils/handlechange.js";
 
-const TaskForm = ({ members, setEditingTask, editingTask, setTasks }) => {
-  const { workspaceId } = useParams()
+const inputCls = "w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/25 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition";
+const selectCls = "w-full px-4 py-2.5 rounded-xl bg-[#1a1a2e] border border-white/10 text-white text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition";
+
+const TaskForm = ({ members, setEditingTask, editingTask, setTasks, onClose }) => {
+  const { workspaceId } = useParams();
   const [taskForm, setTaskForm] = useState({
     title: '',
     description: '',
@@ -17,139 +20,82 @@ const TaskForm = ({ members, setEditingTask, editingTask, setTasks }) => {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      setCreating(true);
-      setCreateError('');
-
-      const taskData = {
-        ...taskForm,
-        assignedTo:
-          taskForm.assignedTo || undefined,
-      };
-
-      console.log(editingTask)
-
-
-      if (editingTask) {
-        const response = await api.put(
-          `/task/${editingTask.id}`,
-          taskData
-        );
-
-        setTasks(prev =>
-          prev.map(task =>
-            task.id === editingTask.id
-              ? response.data.task
-              : task
-          ));
-
-        setEditingTask(null);
-      } else {
-        const response = await api.post(
-          '/task/create',
-          taskData
-        );
-
-        setTasks(prev => [...prev, response.data.task])
-      }
-
-      setTaskForm({
-        title: '',
-        description: '',
-        priority: 'Medium',
-        deadline: '',
-        workspaceId,
-        assignedTo: '',
-      });
-
-    } catch (error) {
-      setCreateError(
-        error.response?.data?.message ||
-        'Operation failed'
-      );
-    } finally {
-      setCreating(false);
-    }
-  };
-
   useEffect(() => {
     if (editingTask) {
       setTaskForm({
         title: editingTask.title,
         description: editingTask.description,
         priority: editingTask.priority,
-        deadline:
-          editingTask.deadline?.split('T')[0] ||
-          '',
+        deadline: editingTask.deadline?.split('T')[0] || '',
         workspaceId,
-        assignedTo:
-          editingTask.assignedTo?.id || '',
+        assignedTo: editingTask.assignedTo?.id || '',
       });
     }
   }, [editingTask, workspaceId]);
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setCreating(true);
+      setCreateError('');
+
+      const taskData = { ...taskForm, assignedTo: taskForm.assignedTo || undefined };
+
+      if (editingTask) {
+        const response = await api.put(`/task/${editingTask.id}`, taskData);
+        setTasks((prev) =>
+          prev.map((task) => (task.id === editingTask.id ? response.data.task : task))
+        );
+        setEditingTask(null);
+      } else {
+        const response = await api.post('/task/create', taskData);
+        setTasks((prev) => [...prev, response.data.task]);
+      }
+
+      setTaskForm({ title: '', description: '', priority: 'Medium', deadline: '', workspaceId, assignedTo: '' });
+      onClose?.();
+    } catch (error) {
+      setCreateError(error.response?.data?.message || 'Operation failed');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditingTask(null);
+    setTaskForm({ title: '', description: '', priority: 'Medium', deadline: '', workspaceId, assignedTo: '' });
+    onClose?.();
+  };
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-4"
-    >
+    <form onSubmit={handleSubmit} className="space-y-4">
       {createError && (
-        <p className="text-red-500">
+        <div className="px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
           {createError}
-        </p>
+        </div>
       )}
 
       <input
         type="text"
         name="title"
-        placeholder="Task Title"
+        placeholder="Task title"
         value={taskForm.title}
         onChange={(e) => handleChange(e, setTaskForm)}
-        className="
-          w-full
-          border
-          rounded-lg
-          p-3
-          focus:outline-none
-          focus:ring-2
-          focus:ring-blue-500
-        "
+        required
+        className={inputCls}
       />
 
       <textarea
         name="description"
-        placeholder="Task Description"
+        placeholder="Task description"
         value={taskForm.description}
         onChange={(e) => handleChange(e, setTaskForm)}
-        rows="4"
-        className="
-          w-full
-          border
-          rounded-lg
-          p-3
-          focus:outline-none
-          focus:ring-2
-          focus:ring-blue-500
-        "
+        rows={3}
+        className={`${inputCls} resize-none`}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <select
-          name="priority"
-          value={taskForm.priority}
-          onChange={(e) => handleChange(e, setTaskForm)}
-          className="
-            border
-            rounded-lg
-            p-3
-            focus:outline-none
-            focus:ring-2
-            focus:ring-blue-500
-          "
-        >
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <select name="priority" value={taskForm.priority} onChange={(e) => handleChange(e, setTaskForm)} className={selectCls}>
           <option value="Low">Low</option>
           <option value="Medium">Medium</option>
           <option value="High">High</option>
@@ -160,97 +106,37 @@ const TaskForm = ({ members, setEditingTask, editingTask, setTasks }) => {
           name="deadline"
           value={taskForm.deadline}
           onChange={(e) => handleChange(e, setTaskForm)}
-          className="
-            border
-            rounded-lg
-            p-3
-            focus:outline-none
-            focus:ring-2
-            focus:ring-blue-500
-          "
+          className={`${inputCls} [scheme:dark]`}
         />
 
-        <select
-          name="assignedTo"
-          value={taskForm.assignedTo}
-          onChange={(e) => handleChange(e, setTaskForm)}
-          className="
-            border
-            rounded-lg
-            p-3
-            focus:outline-none
-            focus:ring-2
-            focus:ring-blue-500
-          "
-        >
-          <option value="">
-            Select Member
-          </option>
-
+        <select name="assignedTo" value={taskForm.assignedTo} onChange={(e) => handleChange(e, setTaskForm)} className={selectCls}>
+          <option value="">Unassigned</option>
           {members.map((member) => (
-            <option
-              key={member._id}
-              value={member._id}
-            >
-              {member.name}
-            </option>
+            <option key={member._id} value={member._id}>{member.name}</option>
           ))}
         </select>
       </div>
 
-      <div className="flex gap-3">
-        {editingTask && (
-          <button
-            type="button"
-            onClick={() => {
-              setEditingTask(null);
-
-              setTaskForm({
-                title: '',
-                description: '',
-                priority: 'Medium',
-                deadline: '',
-                workspaceId,
-                assignedTo: '',
-              });
-            }}
-            className="
-              bg-gray-500
-              text-white
-              px-4
-              py-2
-              rounded-lg
-              hover:bg-gray-600
-            "
-          >
-            Cancel Edit
-          </button>
-        )}
-
+      <div className="flex gap-3 pt-1">
+        <button
+          type="button"
+          onClick={handleCancel}
+          className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/50 text-sm hover:bg-white/5 transition"
+        >
+          Cancel
+        </button>
         <button
           type="submit"
           disabled={creating}
-          className="
-            bg-blue-600
-            text-white
-            px-4
-            py-2
-            rounded-lg
-            hover:bg-blue-700
-            disabled:opacity-50
-          "
+          className="flex-1 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-semibold text-sm transition"
         >
           {creating
-            ? editingTask
-              ? 'Updating...'
-              : 'Creating...'
-            : editingTask
-              ? 'Update Task'
-              : 'Create Task'}
+            ? editingTask ? 'Updating...' : 'Creating...'
+            : editingTask ? 'Update Task' : 'Create Task'}
         </button>
       </div>
     </form>
   );
-}
+};
 
-export default TaskForm
+export default TaskForm;
