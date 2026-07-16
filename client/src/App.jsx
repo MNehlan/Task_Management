@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard.jsx';
 import Register from './pages/Register.jsx';
@@ -11,6 +12,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path='/' element={<Home />} />
         <Route
           path='/login'
           element={<Login />}
