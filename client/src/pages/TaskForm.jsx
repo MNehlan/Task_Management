@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useParams } from "react-router-dom";
+import { handleChange } from "../utils/handlechange.js";
 import api from "../api/api.js"
 
 const TaskForm = ({ members, setEditingTask, editingTask, setTasks }) => {
@@ -15,13 +16,6 @@ const TaskForm = ({ members, setEditingTask, editingTask, setTasks }) => {
 
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
-
-  const handleChange = (e) => {
-    setTaskForm((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -113,7 +107,7 @@ const TaskForm = ({ members, setEditingTask, editingTask, setTasks }) => {
         name="title"
         placeholder="Task Title"
         value={taskForm.title}
-        onChange={handleChange}
+        onChange={(e) => handleChange(e, setTaskForm)}
         className="
           w-full
           border
@@ -129,7 +123,7 @@ const TaskForm = ({ members, setEditingTask, editingTask, setTasks }) => {
         name="description"
         placeholder="Task Description"
         value={taskForm.description}
-        onChange={handleChange}
+        onChange={(e) => handleChange(e, setTaskForm)}
         rows="4"
         className="
           w-full
@@ -146,7 +140,7 @@ const TaskForm = ({ members, setEditingTask, editingTask, setTasks }) => {
         <select
           name="priority"
           value={taskForm.priority}
-          onChange={handleChange}
+          onChange={(e) => handleChange(e, setTaskForm)}
           className="
             border
             rounded-lg
@@ -165,7 +159,7 @@ const TaskForm = ({ members, setEditingTask, editingTask, setTasks }) => {
           type="date"
           name="deadline"
           value={taskForm.deadline}
-          onChange={handleChange}
+          onChange={(e) => handleChange(e, setTaskForm)}
           className="
             border
             rounded-lg
@@ -179,7 +173,7 @@ const TaskForm = ({ members, setEditingTask, editingTask, setTasks }) => {
         <select
           name="assignedTo"
           value={taskForm.assignedTo}
-          onChange={handleChange}
+          onChange={(e) => handleChange(e, setTaskForm)}
           className="
             border
             rounded-lg
