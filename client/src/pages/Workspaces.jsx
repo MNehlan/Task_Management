@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/api.js';
+import { handleChange } from '../utils/handlechange.js';
 
 const Workspaces = () => {
   const [workspaces, setWorkspaces] = useState([]);
@@ -23,13 +24,6 @@ const Workspaces = () => {
   const canManageWorkspace =
     user?.role === 'admin' ||
     user?.role === 'manager'
-
-  const handleChange = (e) => {
-    setWorkspaceForm((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
 
   const handleCreateWorkspace = async (e) => {
     e.preventDefault();
@@ -109,7 +103,7 @@ const Workspaces = () => {
               name="name"
               placeholder="Workspace Name"
               value={workspaceForm.name}
-              onChange={handleChange}
+              onChange={(e) => handleChange(e, setWorkspaceForm)}
               className="w-full border rounded-lg p-3"
             />
 
@@ -117,7 +111,7 @@ const Workspaces = () => {
               name="description"
               placeholder="Workspace Description"
               value={workspaceForm.description}
-              onChange={handleChange}
+              onChange={(e) => handleChange(e, setWorkspaceForm)}
               className="w-full border rounded-lg p-3"
               rows="4"
             />
