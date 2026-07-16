@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useParams } from "react-router-dom";
 import api from "../api/api.js"
 
-const TaskForm = ({ members, fetchWorkspaceData, setEditingTask, editingTask }) => {
+const TaskForm = ({ members, setEditingTask, editingTask, setTasks }) => {
   const { workspaceId } = useParams()
   const [taskForm, setTaskForm] = useState({
     title: '',
@@ -36,20 +36,30 @@ const TaskForm = ({ members, fetchWorkspaceData, setEditingTask, editingTask }) 
           taskForm.assignedTo || undefined,
       };
 
+      console.log(editingTask)
+
 
       if (editingTask) {
-
-        await api.put(
+        const response = await api.put(
           `/task/${editingTask.id}`,
           taskData
         );
 
+        setTasks(prev =>
+          prev.map(task =>
+            task.id === editingTask.id
+              ? response.data.task
+              : task
+          ));
+
         setEditingTask(null);
       } else {
-        await api.post(
+        const response = await api.post(
           '/task/create',
           taskData
         );
+
+        setTasks(prev => [...prev, response.data.task])
       }
 
       setTaskForm({
@@ -61,7 +71,6 @@ const TaskForm = ({ members, fetchWorkspaceData, setEditingTask, editingTask }) 
         assignedTo: '',
       });
 
-      await fetchWorkspaceData();
     } catch (error) {
       setCreateError(
         error.response?.data?.message ||

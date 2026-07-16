@@ -3,6 +3,37 @@ import Task from '../models/Task.js';
 import User from '../models/User.js';
 import Workspace from '../models/Workspace.js';
 
+// Shared Task DTO — every endpoint that returns a task uses this
+const toTaskDTO = (task) => ({
+  id: task._id,
+  title: task.title,
+  description: task.description,
+  priority: task.priority,
+  deadline: task.deadline,
+  status: task.status,
+  assignedTo: task.assignedTo
+    ? {
+        id: task.assignedTo._id,
+        name: task.assignedTo.name,
+        email: task.assignedTo.email,
+        role: task.assignedTo.role,
+      }
+    : null,
+  createdBy: task.createdBy
+    ? {
+        id: task.createdBy._id,
+        name: task.createdBy.name,
+        email: task.createdBy.email,
+      }
+    : null,
+  workspace: {
+    id: task.workspace._id,
+    name: task.workspace.name,
+  },
+  createdAt: task.createdAt,
+  updatedAt: task.updatedAt,
+});
+
 export const createTask = async (req, res) => {
   try {
     let { title, description, priority, deadline, workspaceId, assignedTo } =
@@ -68,9 +99,15 @@ export const createTask = async (req, res) => {
       createdBy: req.user.id,
     });
 
-    res
-      .status(201)
-      .json({ success: true, task, message: 'Task created successfully' });
+    await task.populate('assignedTo', 'name email role');
+    await task.populate('createdBy', 'name email');
+    await task.populate('workspace', 'name');
+
+    res.status(201).json({
+      success: true,
+      task: toTaskDTO(task),
+      message: 'Task created successfully',
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -99,37 +136,14 @@ export const getTaskByWorkspace = async (req, res) => {
       }
     }
 
-    const tasks = await Task.find({
-      workspace: workspaceId,
-    })
-      .populate('workspace', 'name description')
-      .populate('assignedTo', 'name email');
+    const tasks = await Task.find({ workspace: workspaceId })
+      .populate('assignedTo', 'name email role')
+      .populate('createdBy', 'name email')
+      .populate('workspace', 'name');
 
-    const formattedTasks = tasks.map((task) => ({
-      id: task._id,
-      title: task.title,
-      description: task.description,
-      priority: task.priority,
-      deadline: task.deadline,
-      status: task.status,
-
-      assignedTo: task.assignedTo
-        ? {
-            id: task.assignedTo._id,
-            name: task.assignedTo.name,
-            email: task.assignedTo.email,
-          }
-        : null,
-
-      workspace: {
-        name: task.workspace.name,
-        description: task.workspace.description,
-      },
-    }));
-    
     res.status(200).json({
       success: true,
-      tasks: formattedTasks,
+      tasks: tasks.map(toTaskDTO),
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -158,7 +172,8 @@ export const updateTaskStatus = async (req, res) => {
     }
 
     const task = await Task.findById(taskId)
-      .populate('assignedTo', 'name email')
+      .populate('assignedTo', 'name email role')
+      .populate('createdBy', 'name email')
       .populate('workspace', 'name owner members');
 
     if (!task) {
@@ -194,35 +209,11 @@ export const updateTaskStatus = async (req, res) => {
     }
 
     task.status = status;
-
     await task.save();
 
     res.status(200).json({
       success: true,
-
-      task: {
-        id: task._id,
-
-        title: task.title,
-
-        status: task.status,
-
-        assignedTo: task.assignedTo
-          ? {
-              id: task.assignedTo._id,
-              name: task.assignedTo.name,
-              email: task.assignedTo.email,
-            }
-          : null,
-
-        workspace: {
-          id: task.workspace._id,
-          name: task.workspace.name,
-        },
-
-        updatedAt: task.updatedAt,
-      },
-
+      task: toTaskDTO(task),
       message: 'Task status updated successfully',
     });
   } catch (error) {
@@ -264,50 +255,7 @@ export const getTaskById = async (req, res) => {
 
     res.status(200).json({
       success: true,
-
-      task: {
-        id: task._id,
-
-        title: task.title,
-
-        description: task.description,
-
-        priority: task.priority,
-
-        deadline: task.deadline,
-
-        status: task.status,
-
-        assignedTo: task.assignedTo
-          ? {
-              id: task.assignedTo._id,
-
-              name: task.assignedTo.name,
-
-              email: task.assignedTo.email,
-
-              role: task.assignedTo.role,
-            }
-          : null,
-
-        createdBy: {
-          id: task.createdBy._id,
-
-          name: task.createdBy.name,
-
-          email: task.createdBy.email,
-        },
-
-        workspace: {
-          id: task.workspace._id,
-
-          name: task.workspace.name,
-        },
-
-        createdAt: task.createdAt,
-
-        updatedAt: task.updatedAt,
-      },
+      task: toTaskDTO(task),
     });
   } catch (error) {
     res.status(500).json({
@@ -325,6 +273,7 @@ export const updateTask = async (req, res) => {
 
     const task = await Task.findById(taskId)
       .populate('assignedTo', 'name email role')
+      .populate('createdBy', 'name email')
       .populate('workspace', 'name owner members');
 
     if (!task) {
@@ -367,7 +316,6 @@ export const updateTask = async (req, res) => {
       }
 
       task.assignedTo = user._id;
-
       await task.populate('assignedTo', 'name email role');
     }
 
@@ -381,52 +329,15 @@ export const updateTask = async (req, res) => {
     }
 
     if (title) task.title = title;
-
     if (description) task.description = description;
-
     if (priority) task.priority = priority;
-
     if (deadline) task.deadline = deadline;
 
     await task.save();
 
     res.status(200).json({
       success: true,
-
-      tasks: {
-        id: task._id,
-
-        title: task.title,
-
-        description: task.description,
-
-        priority: task.priority,
-
-        deadline: task.deadline,
-
-        status: task.status,
-
-        assignedTo: task.assignedTo
-          ? {
-              id: task.assignedTo._id,
-
-              name: task.assignedTo.name,
-
-              email: task.assignedTo.email,
-
-              role: task.assignedTo.role,
-            }
-          : null,
-
-        workspace: {
-          id: task.workspace._id,
-
-          name: task.workspace.name,
-        },
-
-        updatedAt: task.updatedAt,
-      },
-
+      task: toTaskDTO(task),
       message: 'Task updated successfully',
     });
   } catch (error) {

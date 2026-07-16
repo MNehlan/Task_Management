@@ -290,7 +290,9 @@ export const inviteMember = async (req, res) => {
       success: true,
       member: {
         id: user._id,
+        name: user.name,
         email: user.email,
+        role: user.role,
       },
       message: 'User added',
     });

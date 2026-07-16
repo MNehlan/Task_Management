@@ -54,8 +54,16 @@ const WorkspaceDetails = () => {
 
   const updateStatus = async (taskId, status) => {
     try {
+      setTasks(prev =>
+        prev.map(task =>
+          task.id === taskId
+            ? {
+              ...task, status
+            } : task
+        )
+      );
+
       await api.patch(`/task/${taskId}`, { status });
-      await fetchWorkspaceData();
     } catch (error) {
       setError(
         error.response?.data?.message ||
@@ -75,7 +83,7 @@ const WorkspaceDetails = () => {
 
     try {
       await api.delete(`/task/${taskId}`);
-      await fetchWorkspaceData();
+      setTasks(prev => prev.filter(task => task.id !== taskId))
     } catch (error) {
       setError(
         error.response?.data?.message ||
@@ -95,7 +103,7 @@ const WorkspaceDetails = () => {
       setAddingMember(true);
       setMemberError('');
 
-      await api.post(
+      const response = await api.post(
         `/workspace/${workspaceId}/members`,
         {
           email: memberEmail,
@@ -104,7 +112,7 @@ const WorkspaceDetails = () => {
 
       setMemberEmail('');
 
-      await fetchWorkspaceData();
+      setMembers(prev => [...prev, response.data.member])
     } catch (error) {
       setMemberError(
         error.response?.data?.message ||
@@ -129,7 +137,7 @@ const WorkspaceDetails = () => {
         `/workspace/${workspaceId}/members/${userId}`
       );
 
-      await fetchWorkspaceData();
+      setMembers(prev => prev.filter(member => member._id !== userId))
     } catch (error) {
       setError(
         error.response?.data?.message ||
@@ -366,9 +374,9 @@ const WorkspaceDetails = () => {
           </h2>
           <TaskForm
             members={members}
-            fetchWorkspaceData={fetchWorkspaceData}
             editingTask={editingTask}
             setEditingTask={setEditingTask}
+            setTasks={setTasks}
           />
         </section>
       )}
