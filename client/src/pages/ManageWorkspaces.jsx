@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react';
 import api from '../api/api.js';
+import Modal from '../components/Modal.jsx';
 
 const ManageWorkspaces = () => {
   const [workspaces, setWorkspaces] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState(null);
+
+  // Detail Modal states
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [workspaceDetails, setWorkspaceDetails] = useState(null);
 
   const fetchWorkspaces = async () => {
     try {
@@ -23,6 +29,21 @@ const ManageWorkspaces = () => {
   useEffect(() => {
     fetchWorkspaces();
   }, []);
+
+  const handleViewWorkspace = async (workspaceId) => {
+    try {
+      setModalOpen(true);
+      setModalLoading(true);
+      setWorkspaceDetails(null);
+      const { data } = await api.get(`/admin/workspaces/${workspaceId}`);
+      setWorkspaceDetails(data.workspace);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to load workspace details');
+      setModalOpen(false);
+    } finally {
+      setModalLoading(false);
+    }
+  };
 
   const handleDeleteWorkspace = async (workspaceId, workspaceName) => {
     const confirmDelete = window.confirm(
@@ -122,13 +143,21 @@ const ManageWorkspaces = () => {
 
                     {/* Actions */}
                     <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => handleDeleteWorkspace(ws.id, ws.name)}
-                        disabled={isDeleting}
-                        className="text-xs px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition cursor-pointer"
-                      >
-                        {isDeleting ? 'Deleting...' : 'Delete'}
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => handleViewWorkspace(ws.id)}
+                          className="text-xs px-3 py-1.5 rounded-lg border border-violet-500/30 text-violet-400 hover:bg-violet-500/10 transition cursor-pointer"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() => handleDeleteWorkspace(ws.id, ws.name)}
+                          disabled={isDeleting}
+                          className="text-xs px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition cursor-pointer"
+                        >
+                          {isDeleting ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -144,6 +173,97 @@ const ManageWorkspaces = () => {
           </div>
         )}
       </div>
+
+      {/* Workspace Details Modal */}
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={workspaceDetails ? `Workspace: ${workspaceDetails.name}` : 'Loading details...'}
+      >
+        {modalLoading ? (
+          <div className="text-center text-white/40 py-8 text-sm">Fetching workspace details...</div>
+        ) : workspaceDetails ? (
+          <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
+            {/* Description */}
+            <div>
+              <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-1">Description</h3>
+              <p className="text-sm text-white/80 bg-white/5 border border-white/10 p-3 rounded-xl leading-relaxed">
+                {workspaceDetails.description || 'No description provided.'}
+              </p>
+            </div>
+
+            {/* Owner Info */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-1">Owner</h3>
+                <p className="text-sm text-white font-medium">{workspaceDetails.owner?.name || '—'}</p>
+              </div>
+              <div>
+                <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-1">Owner Email</h3>
+                <p className="text-sm text-white/60 truncate">{workspaceDetails.owner?.email || '—'}</p>
+              </div>
+            </div>
+
+            {/* Members Section */}
+            <div>
+              <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">
+                Members ({workspaceDetails.members?.length ?? 0})
+              </h3>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {workspaceDetails.members?.map((m) => (
+                  <div key={m.id} className="flex items-center justify-between bg-white/5 border border-white/10 p-2.5 rounded-xl text-xs">
+                    <div>
+                      <p className="font-semibold text-white">{m.name}</p>
+                      <p className="text-white/40">{m.email}</p>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] uppercase text-white/60">
+                      {m.role}
+                    </span>
+                  </div>
+                ))}
+                {(!workspaceDetails.members || workspaceDetails.members.length === 0) && (
+                  <p className="text-xs text-white/40">No members found.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Tasks Section */}
+            <div>
+              <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">
+                Tasks ({workspaceDetails.tasks?.length ?? 0})
+              </h3>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {workspaceDetails.tasks?.map((task) => (
+                  <div key={task.id} className="bg-white/5 border border-white/10 p-3 rounded-xl text-xs space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <p className="font-semibold text-white">{task.title}</p>
+                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium border ${
+                        task.status === 'Completed'
+                          ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                          : task.status === 'Review'
+                          ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'
+                          : task.status === 'In Progress'
+                          ? 'bg-orange-500/10 border-orange-500/30 text-orange-400'
+                          : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
+                      }`}>
+                        {task.status}
+                      </span>
+                    </div>
+                    <p className="text-white/50 line-clamp-1">{task.description}</p>
+                    <div className="flex justify-between text-[10px] text-white/30 pt-1 border-t border-white/5">
+                      <span>Priority: <strong className="text-white/50">{task.priority}</strong></span>
+                      <span>Assignee: <strong className="text-white/50">{task.assignedTo?.name || 'Unassigned'}</strong></span>
+                    </div>
+                  </div>
+                ))}
+                {(!workspaceDetails.tasks || workspaceDetails.tasks.length === 0) && (
+                  <p className="text-xs text-white/40">No tasks found.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
     </div>
   );
 };
