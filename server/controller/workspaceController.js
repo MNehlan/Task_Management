@@ -5,72 +5,41 @@ import Task from '../models/Task.js';
 
 export const getDashboard = async (req, res) => {
   try {
-    if (req.user.role === 'admin') {
-      const users = await User.countDocuments();
-      const workspaces = await Workspace.countDocuments();
-      const tasks = await Task.countDocuments();
-      const completed = await Task.countDocuments({
-        status: 'Completed',
-      });
-      const todo = await Task.countDocuments({
-        status: 'Todo',
-      });
-      const inProgress = await Task.countDocuments({
-        status: 'In Progress',
-      });
-      const review = await Task.countDocuments({
-        status: 'Review',
-      });
+    const workspaces = await Workspace.find({
+      members: req.user.id,
+    });
 
-      return res.status(200).json({
-        success: true,
-        stats: {
-          users,
-          workspaces,
-          tasks,
-          todo,
-          inProgress,
-          review,
-          completed,
-        },
-      });
-    } else {
-      const workspaces = await Workspace.find({
-        members: req.user.id,
-      });
+    const workspaceIds = workspaces.map((workspace) => workspace._id);
 
-      const workspaceIds = workspaces.map((workspace) => workspace._id);
+    const tasks = await Task.find({
+      workspace: {
+        $in: workspaceIds,
+      },
+    });
 
-      const tasks = await Task.find({
-        workspace: {
-          $in: workspaceIds,
-        },
-      });
+    const completed = tasks.filter(
+      (task) => task.status === 'Completed',
+    ).length;
 
-      const completed = tasks.filter(
-        (task) => task.status === 'Completed',
-      ).length;
+    const todo = tasks.filter((task) => task.status === 'Todo').length;
 
-      const todo = tasks.filter((task) => task.status === 'Todo').length;
+    const inProgress = tasks.filter(
+      (task) => task.status === 'In Progress',
+    ).length;
 
-      const inProgress = tasks.filter(
-        (task) => task.status === 'In Progress',
-      ).length;
+    const review = tasks.filter((task) => task.status === 'Review').length;
 
-      const review = tasks.filter((task) => task.status === 'Review').length;
-
-      return res.status(200).json({
-        success: true,
-        stats: {
-          workspaces: workspaces.length,
-          tasks: tasks.length,
-          todo,
-          inProgress,
-          review,
-          completed,
-        },
-      });
-    }
+    return res.status(200).json({
+      success: true,
+      stats: {
+        workspaces: workspaces.length,
+        tasks: tasks.length,
+        todo,
+        inProgress,
+        review,
+        completed,
+      },
+    });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

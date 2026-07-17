@@ -7,6 +7,7 @@ import { verifyToken, authorizeRoles } from './middleware/authMiddleware.js';
 import authRoutes from './routes/authRoutes.js';
 import workspaceRoutes from './routes/workspaceRoute.js';
 import taskRoutes from './routes/taskRoute.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 dotenv.config();
 
@@ -20,10 +21,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/workspace', workspaceRoutes);
 app.use('/api/task', taskRoutes);
 
-app.get('/api/test', verifyToken, authorizeRoles('Admin'), (req, res) => {
-  const request = req.user;
-  res.status(200).json({ request, message: 'Middleware working' });
-});
+app.use('/api/admin', adminRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI)
