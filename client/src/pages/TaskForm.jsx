@@ -95,10 +95,10 @@ const TaskForm = ({ members, setEditingTask, editingTask, setTasks, onClose }) =
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <select name="priority" value={taskForm.priority} onChange={(e) => handleChange(e, setTaskForm)} className={selectCls}>
-          <option value="Low">Low</option>
-          <option value="Medium">Medium</option>
-          <option value="High">High</option>
+        <select name="priority" value={taskForm.priority} onChange={(e) => handleChange(e, setTaskForm)} className={`${selectCls} [scheme:dark]`}>
+          <option value="Low" className="bg-[#1a1a2e] text-white">Low</option>
+          <option value="Medium" className="bg-[#1a1a2e] text-white">Medium</option>
+          <option value="High" className="bg-[#1a1a2e] text-white">High</option>
         </select>
 
         <input
@@ -109,10 +109,10 @@ const TaskForm = ({ members, setEditingTask, editingTask, setTasks, onClose }) =
           className={`${inputCls} [scheme:dark]`}
         />
 
-        <select name="assignedTo" value={taskForm.assignedTo} onChange={(e) => handleChange(e, setTaskForm)} className={selectCls}>
-          <option value="">Unassigned</option>
+        <select name="assignedTo" value={taskForm.assignedTo} onChange={(e) => handleChange(e, setTaskForm)} className={`${selectCls} [colorscheme:dark]`}>
+          <option value="" className="bg-[#1a1a2e] text-white">Unassigned</option>
           {members.map((member) => (
-            <option key={member._id} value={member._id}>{member.name}</option>
+            <option key={member._id} value={member._id} className="bg-[#1a1a2e] text-white">{member.name}</option>
           ))}
         </select>
       </div>

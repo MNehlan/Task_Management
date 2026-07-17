@@ -6,6 +6,7 @@ import Register from './pages/Register.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
 import AdminProtectedRoute from './routes/AdminProtectedRoute.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
+import ManageUsers from './pages/ManageUsers.jsx';
 import Workspaces from './pages/Workspaces.jsx';
 import WorkspaceDetails from './pages/WorkspaceDetails.jsx';
 import Layout from './components/Layout.jsx';
@@ -43,6 +44,10 @@ const App = () => {
               <Route
                 path='/admin/dashboard'
                 element={<AdminDashboard />}
+              />
+              <Route
+                path='/admin/users'
+                element={<ManageUsers />}
               />
             </Route>
           </Route>

@@ -53,8 +53,8 @@ const TaskCard = ({ task, canManage, onStatusChange, onEdit, onDelete }) => {
           onChange={(e) => onStatusChange(task.id, e.target.value)}
           disabled={isCompleted}
           className={`flex-1 text-xs px-3 py-2 rounded-lg border text-white/80 focus:outline-none focus:border-violet-500 transition [scheme:dark] ${isCompleted
-              ? 'bg-green-500/10 border-green-500/30 text-green-400 cursor-not-allowed opacity-70'
-              : 'bg-white/5 border-white/10 cursor-pointer'
+            ? 'bg-green-500/10 border-green-500/30 text-green-400 cursor-not-allowed opacity-70'
+            : 'bg-white/5 border-white/10 cursor-pointer'
             }`}
         >
           {(isCompleted ? ['Completed'] : canManage ? allStatusOptions : memberStatusOptions).map((s) => (
