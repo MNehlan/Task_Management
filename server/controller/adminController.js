@@ -51,3 +51,64 @@ export const getAllWorkspaces = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const getWorkspaceById = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+
+    const workspace = await Workspace.findById(workspaceId)
+      .populate('owner', 'name email')
+      .populate('members', 'name email role')
+      .lean();
+
+    if (!workspace) {
+      return res.status(404).json({ success: false, message: 'Workspace not found' });
+    }
+
+    const tasks = await Task.find({ workspace: workspaceId })
+      .populate('assignedTo', 'name email role')
+      .populate('createdBy', 'name email')
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      workspace: {
+        id: workspace._id,
+        name: workspace.name,
+        description: workspace.description,
+        owner: {
+          id: workspace.owner._id,
+          name: workspace.owner.name,
+          email: workspace.owner.email,
+        },
+        members: workspace.members.map((m) => ({
+          id: m._id,
+          name: m.name,
+          email: m.email,
+          role: m.role,
+        })),
+        tasks: tasks.map((task) => ({
+          id: task._id,
+          title: task.title,
+          description: task.description,
+          priority: task.priority,
+          status: task.status,
+          deadline: task.deadline,
+          assignedTo: task.assignedTo
+            ? { id: task.assignedTo._id, name: task.assignedTo.name, email: task.assignedTo.email }
+            : null,
+          createdBy: {
+            id: task.createdBy._id,
+            name: task.createdBy.name,
+            email: task.createdBy.email,
+          },
+          createdAt: task.createdAt,
+        })),
+        createdAt: workspace.createdAt,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
