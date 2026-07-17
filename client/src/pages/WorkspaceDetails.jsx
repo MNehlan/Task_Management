@@ -21,6 +21,12 @@ const WorkspaceDetails = () => {
   const [editingTask, setEditingTask] = useState(null);
   const [memberModalOpen, setMemberModalOpen] = useState(false);
 
+  // Edit workspace modal
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({ name: '', description: '' });
+  const [editError, setEditError] = useState('');
+  const [saving, setSaving] = useState(false);
+
   // Add member form
   const [memberEmail, setMemberEmail] = useState('');
   const [addingMember, setAddingMember] = useState(false);
@@ -54,6 +60,27 @@ const WorkspaceDetails = () => {
       await api.patch(`/task/${taskId}`, { status });
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to change task status');
+    }
+  };
+
+  const handleOpenEditModal = () => {
+    setEditForm({ name: workspace.name, description: workspace.description });
+    setEditError('');
+    setEditModalOpen(true);
+  };
+
+  const handleUpdateWorkspace = async (e) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      setEditError('');
+      const { data } = await api.patch(`/workspace/${workspaceId}`, editForm);
+      setWorkspace((prev) => ({ ...prev, name: data.workspace.name, description: data.workspace.description }));
+      setEditModalOpen(false);
+    } catch (error) {
+      setEditError(error.response?.data?.message || 'Failed to update workspace');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -150,13 +177,23 @@ const WorkspaceDetails = () => {
           </div>
           <div className="flex gap-2 flex-wrap">
             {canManageWorkspace && (
-              <button
-                onClick={handleDeleteWorkspace}
-                className="text-sm px-4 py-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition"
-              >
-                Delete Workspace
-              </button>
+              <>
+                <button
+                  onClick={handleOpenEditModal}
+                  className="text-sm px-4 py-2 rounded-xl border border-violet-500/30 text-violet-400 hover:bg-violet-500/10 transition"
+                >
+                  Edit
+                </button>
+
+                <button
+                  onClick={handleDeleteWorkspace}
+                  className="text-sm px-4 py-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition"
+                >
+                  Delete
+                </button>
+              </>
             )}
+
             <button
               onClick={handleLeaveWorkspace}
               className="text-sm px-4 py-2 rounded-xl border border-white/15 text-white/50 hover:bg-white/5 transition"
@@ -279,6 +316,52 @@ const WorkspaceDetails = () => {
               className="flex-1 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-semibold text-sm transition"
             >
               {addingMember ? 'Adding...' : 'Add Member'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── Edit Workspace Modal ── */}
+      <Modal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        title="Edit Workspace"
+      >
+        {editError && (
+          <div className="mb-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+            {editError}
+          </div>
+        )}
+        <form onSubmit={handleUpdateWorkspace} className="space-y-4">
+          <input
+            type="text"
+            placeholder="Workspace name"
+            value={editForm.name}
+            onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
+            required
+            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/25 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+          />
+          <textarea
+            placeholder="Workspace description"
+            value={editForm.description}
+            onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
+            rows={3}
+            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/25 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-none"
+          />
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setEditModalOpen(false)}
+              className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/80 text-sm hover:bg-white/5 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-semibold text-sm transition"
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </form>
