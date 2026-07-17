@@ -10,11 +10,6 @@ TaskFlow is a premium, responsive task management platform built on the MERN sta
 | :---: | :---: | :---: |
 | ![Landing Page](./screenshots/home.png) | ![Login Screen](./screenshots/login.png) | ![Dashboard](./screenshots/dashboard.png) |
 
-| Admin Dashboard | | |
-| :---: | :---: | :---: |
-| ![Admin Dashboard](./screenshots/admin-dashboard.png) | | |
-
----
 
 ## 🎨 Design Philosophy & UX
 - **Glassmorphic Dark Mode**: Designed using rich gradient dark fills (`bg-[#0e0e1a]`/`bg-[#12122a]`), translucent borders (`border-white/10`), blur backdrops, and glowing violet hover cues.
