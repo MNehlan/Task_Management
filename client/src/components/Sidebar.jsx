@@ -17,7 +17,7 @@ const Sidebar = () => {
   const user = JSON.parse(localStorage.getItem('user') || 'null');
 
   return (
-    <aside className="w-60 min-h-screen bg-[#12122a] border-r border-white/10 p-5 flex flex-col gap-2 shrink-0">
+    <aside className="w-60 min-h-screen bg-[#12122a] border-r border-white/10 p-5 hidden md:flex flex-col gap-2 shrink-0">
       <p className="text-xs font-semibold text-white/30 uppercase tracking-widest mb-2 px-2">
         Navigation
       </p>
