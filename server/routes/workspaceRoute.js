@@ -10,11 +10,12 @@ import {
   inviteMember,
   leaveWorkspace,
   removeMember,
+  updateWorkspace,
 } from '../controller/workspaceController.js';
 
 const router = express.Router();
 
-router.get('/dashboard', verifyToken, getDashboard)
+router.get('/dashboard', verifyToken, getDashboard);
 
 router.post(
   '/create',
@@ -27,9 +28,20 @@ router.get('/', verifyToken, getWorkspace);
 
 router.get('/:workspaceId', verifyToken, getSingleWorkspace);
 
-router.delete('/:workspaceId', verifyToken, authorizeRoles('admin', 'manager'), deleteWorkspace)
+router.delete(
+  '/:workspaceId',
+  verifyToken,
+  authorizeRoles('admin', 'manager'),
+  deleteWorkspace,
+);
+router.patch(
+  '/:workspaceId',
+  verifyToken,
+  authorizeRoles('admin', 'manager'),
+  updateWorkspace,
+);
 
-router.delete('/:workspaceId/leave', verifyToken, leaveWorkspace)
+router.delete('/:workspaceId/leave', verifyToken, leaveWorkspace);
 
 //member management route
 router.post(
@@ -41,6 +53,11 @@ router.post(
 
 router.get('/:workspaceId/members', verifyToken, getWorkspaceMembers);
 
-router.delete('/:workspaceId/members/:userId', verifyToken, authorizeRoles('manager', 'admin'), removeMember)
+router.delete(
+  '/:workspaceId/members/:userId',
+  verifyToken,
+  authorizeRoles('manager', 'admin'),
+  removeMember,
+);
 
 export default router;

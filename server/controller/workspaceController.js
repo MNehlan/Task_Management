@@ -153,6 +153,50 @@ export const deleteWorkspace = async (req, res) => {
   }
 };
 
+export const updateWorkspace = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+    const { name, description } = req.body;
+
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) {
+      return res.status(404).json({ success: false, message: 'Workspace not found' });
+    }
+
+    const canUpdate =
+      req.user.role === 'admin' || workspace.owner?.toString() === req.user.id;
+    if (!canUpdate) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    const noChange =
+      (!name || name.trim() === workspace.name) &&
+      (!description || description.trim() === workspace.description);
+
+    if (noChange) {
+      return res.status(400).json({ success: false, message: 'No changes detected' });
+    }
+
+    if (name) workspace.name = name.trim();
+    if (description) workspace.description = description.trim();
+
+    await workspace.save();
+
+    res.status(200).json({
+      success: true,
+      workspace: {
+        id: workspace._id,
+        name: workspace.name,
+        description: workspace.description,
+      },
+      message: 'Workspace updated successfully',
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 export const leaveWorkspace = async (req, res) => {
   try {
     const { workspaceId } = req.params;
