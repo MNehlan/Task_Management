@@ -103,7 +103,7 @@ Task-management/
    ```
 3. Create a `.env` file:
    ```env
-   PORT=5000
+   PORT=3000
    MONGO_URI=your_mongodb_connection_string
    SECRET_KEY=your_jwt_signing_secret
    ```
