@@ -1,6 +1,6 @@
 # TaskFlow — Premium MERN Task Management System
 
-TaskFlow is a premium, responsive task management platform built on the MERN stack (MongoDB, Express, React, Node.js). Designed with a modern, glassmorphic dark theme (indigo/violet accents), TaskFlow provides role-based task lifecycle tracking, collaborative workspaces, and an advanced administration dashboard.
+TaskFlow is a premium, responsive task management platform built on the MERN stack (MongoDB, Express, React, Node.js). Designed with a modern, glassmorphic dark theme (indigo/violet accents), TaskFlow delivers a sleek, intuitive interface for seamless team collaboration and task management.
 
 ---
 
@@ -10,11 +10,15 @@ TaskFlow is a premium, responsive task management platform built on the MERN sta
 | :---: | :---: | :---: |
 | ![Landing Page](./screenshots/home.png) | ![Login Screen](./screenshots/login.png) | ![Dashboard](./screenshots/dashboard.png) |
 
+| Admin Dashboard | | |
+| :---: | :---: | :---: |
+| ![Admin Dashboard](./screenshots/admin-dashboard.png) | | |
+
 ---
 
 ## 🎨 Design Philosophy & UX
 - **Glassmorphic Dark Mode**: Designed using rich gradient dark fills (`bg-[#0e0e1a]`/`bg-[#12122a]`), translucent borders (`border-white/10`), blur backdrops, and glowing violet hover cues.
-- **Mobile First Responsive Layout**: Dynamic layout configuration hides side navigation on mobile viewports and replaces it with a clean sliding drawer menu toggled by a hamburger button (`☰` / `✕`).
+- **Mobile First Responsive Layout**: Dynamic layout configuration hides side navigation on mobile viewports and replaces it with a clean sliding drawer menu toggled by a hamburger button (`☰` / `⛌`).
 - **Interactive Forms**: Modals are configured with double-confirmation dialogs, locked click-outside closures, and specific dark/light theme adjustments (`[color-scheme:dark]`).
 
 ---
