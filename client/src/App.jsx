@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard.jsx';
 import Register from './pages/Register.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
+import PublicRoute from './routes/PublicRoute.jsx';
 import AdminProtectedRoute from './routes/AdminProtectedRoute.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import ManageUsers from './pages/ManageUsers.jsx';
@@ -17,15 +18,12 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path='/' element={<Home />} />
-        <Route
-          path='/login'
-          element={<Login />}
-        />
-        <Route
-          path='/register'
-          element={<Register />}
-        />
+        {/* Public Routes - Redirect to dashboard if logged in */}
+        <Route element={<PublicRoute />}>
+          <Route path='/' element={<Home />} />
+          <Route path='/login' element={<Login />} />
+          <Route path='/register' element={<Register />} />
+        </Route>
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
             <Route
