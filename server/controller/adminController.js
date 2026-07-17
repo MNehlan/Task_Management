@@ -112,3 +112,87 @@ export const getWorkspaceById = async (req, res) => {
   }
 };
 
+export const getAllTasks = async (req, res) => {
+  try {
+    const tasks = await Task.find()
+      .populate('assignedTo', 'name email role')
+      .populate('createdBy', 'name email')
+      .populate('workspace', 'name')
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      tasks: tasks.map((task) => ({
+        id: task._id,
+        title: task.title,
+        description: task.description,
+        priority: task.priority,
+        status: task.status,
+        deadline: task.deadline,
+        assignedTo: task.assignedTo
+          ? { id: task.assignedTo._id, name: task.assignedTo.name, email: task.assignedTo.email }
+          : null,
+        createdBy: {
+          id: task.createdBy._id,
+          name: task.createdBy.name,
+          email: task.createdBy.email,
+        },
+        workspace: {
+          id: task.workspace._id,
+          name: task.workspace.name,
+        },
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt,
+      })),
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getTaskById = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+
+    const task = await Task.findById(taskId)
+      .populate('assignedTo', 'name email role')
+      .populate('createdBy', 'name email')
+      .populate('workspace', 'name')
+      .lean();
+
+    if (!task) {
+      return res.status(404).json({ success: false, message: 'Task not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      task: {
+        id: task._id,
+        title: task.title,
+        description: task.description,
+        priority: task.priority,
+        status: task.status,
+        deadline: task.deadline,
+        assignedTo: task.assignedTo
+          ? { id: task.assignedTo._id, name: task.assignedTo.name, email: task.assignedTo.email }
+          : null,
+        createdBy: {
+          id: task.createdBy._id,
+          name: task.createdBy.name,
+          email: task.createdBy.email,
+        },
+        workspace: {
+          id: task.workspace._id,
+          name: task.workspace.name,
+        },
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
