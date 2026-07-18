@@ -55,11 +55,13 @@ const WorkspaceDetails = () => {
   };
 
   const updateStatus = async (taskId, status) => {
+    const previousTasks = [...tasks];
     setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status } : t)));
     try {
       await api.patch(`/task/${taskId}`, { status });
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to change task status');
+      alert(error.response?.data?.message || 'Failed to change task status');
+      setTasks(previousTasks); // rollback
     }
   };
 
@@ -95,7 +97,7 @@ const WorkspaceDetails = () => {
       await api.delete(`/task/${taskId}`);
       setTasks((prev) => prev.filter((t) => t.id !== taskId));
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to delete task');
+      alert(error.response?.data?.message || 'Failed to delete task');
     }
   };
 
@@ -121,7 +123,7 @@ const WorkspaceDetails = () => {
       await api.delete(`/workspace/${workspaceId}/members/${userId}`);
       setMembers((prev) => prev.filter((m) => m._id !== userId));
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to remove member');
+      alert(error.response?.data?.message || 'Failed to remove member');
     }
   };
 
@@ -131,7 +133,7 @@ const WorkspaceDetails = () => {
       await api.delete(`/workspace/${workspaceId}/leave`);
       navigate('/workspaces');
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to leave workspace');
+      alert(error.response?.data?.message || 'Failed to leave workspace');
     }
   };
 
@@ -141,7 +143,7 @@ const WorkspaceDetails = () => {
       await api.delete(`/workspace/${workspaceId}`);
       navigate('/workspaces');
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to delete workspace');
+      alert(error.response?.data?.message || 'Failed to delete workspace');
     }
   };
 
