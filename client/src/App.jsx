@@ -1,12 +1,13 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-import ProtectedRoute from './routes/ProtectedRoute.jsx';
 import PublicRoute from './routes/PublicRoute.jsx';
-import AdminProtectedRoute from './routes/AdminProtectedRoute.jsx';
-import Layout from './components/Layout.jsx';
+// lazy loading routes
+const ProtectedRoute = lazy(() => import('./routes/ProtectedRoute.jsx'));
+const AdminProtectedRoute = lazy(() => import('./routes/AdminProtectedRoute.jsx'));
 
 // Lazy load page components for Code Splitting & Performance optimization
+const Layout = lazy(() => import('./components/Layout.jsx'));
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register.jsx'));
