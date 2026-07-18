@@ -1,5 +1,5 @@
 import express from 'express';
-import { authorizeRoles, verifyToken } from '../middleware/authMiddleware.js';
+import { authorizeRoles, verifyToken } from '../middlewares/authMiddleware.js';
 import {
   createWorkspace,
   deleteWorkspace,
@@ -11,7 +11,7 @@ import {
   leaveWorkspace,
   removeMember,
   updateWorkspace,
-} from '../controller/workspaceController.js';
+} from '../controllers/workspaceController.js';
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
 import express from 'express';
-import { authorizeRoles, verifyToken } from '../middleware/authMiddleware.js';
+import { authorizeRoles, verifyToken } from '../middlewares/authMiddleware.js';
 import {
   createTask,
   deleteTask,
@@ -7,7 +7,7 @@ import {
   getTaskByWorkspace,
   updateTask,
   updateTaskStatus,
-} from '../controller/taskController.js';
+} from '../controllers/taskController.js';
 
 const router = express.Router();
 

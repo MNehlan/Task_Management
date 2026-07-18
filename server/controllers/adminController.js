@@ -43,7 +43,7 @@ export const getAllWorkspaces = async (req, res) => {
           taskCount,
           createdAt: ws.createdAt,
         };
-      })
+      }),
     );
 
     res.status(200).json({ success: true, workspaces: workspacesWithStats });
@@ -62,7 +62,9 @@ export const getWorkspaceById = async (req, res) => {
       .lean();
 
     if (!workspace) {
-      return res.status(404).json({ success: false, message: 'Workspace not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: 'Workspace not found' });
     }
 
     const tasks = await Task.find({ workspace: workspaceId })
@@ -95,7 +97,11 @@ export const getWorkspaceById = async (req, res) => {
           status: task.status,
           deadline: task.deadline,
           assignedTo: task.assignedTo
-            ? { id: task.assignedTo._id, name: task.assignedTo.name, email: task.assignedTo.email }
+            ? {
+                id: task.assignedTo._id,
+                name: task.assignedTo.name,
+                email: task.assignedTo.email,
+              }
             : null,
           createdBy: {
             id: task.createdBy._id,
@@ -130,7 +136,11 @@ export const getAllTasks = async (req, res) => {
         status: task.status,
         deadline: task.deadline,
         assignedTo: task.assignedTo
-          ? { id: task.assignedTo._id, name: task.assignedTo.name, email: task.assignedTo.email }
+          ? {
+              id: task.assignedTo._id,
+              name: task.assignedTo.name,
+              email: task.assignedTo.email,
+            }
           : null,
         createdBy: {
           id: task.createdBy._id,
@@ -161,7 +171,9 @@ export const getTaskById = async (req, res) => {
       .lean();
 
     if (!task) {
-      return res.status(404).json({ success: false, message: 'Task not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: 'Task not found' });
     }
 
     res.status(200).json({
@@ -174,7 +186,11 @@ export const getTaskById = async (req, res) => {
         status: task.status,
         deadline: task.deadline,
         assignedTo: task.assignedTo
-          ? { id: task.assignedTo._id, name: task.assignedTo.name, email: task.assignedTo.email }
+          ? {
+              id: task.assignedTo._id,
+              name: task.assignedTo.name,
+              email: task.assignedTo.email,
+            }
           : null,
         createdBy: {
           id: task.createdBy._id,
@@ -219,7 +235,9 @@ export const updateUserRole = async (req, res) => {
     const { role } = req.body;
 
     if (userId === req.user.id) {
-      return res.status(400).json({ success: false, message: 'You cannot change your own role' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'You cannot change your own role' });
     }
 
     const validRoles = ['member', 'manager', 'admin'];
@@ -230,11 +248,13 @@ export const updateUserRole = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       userId,
       { role },
-      { new: true }
+      { new: true },
     ).select('-password');
 
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not found' });
     }
 
     res.status(200).json({
@@ -257,21 +277,26 @@ export const deleteUser = async (req, res) => {
     const { userId } = req.params;
 
     if (userId === req.user.id) {
-      return res.status(400).json({ success: false, message: 'You cannot delete your own account' });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: 'You cannot delete your own account',
+        });
     }
 
     const user = await User.findByIdAndDelete(userId);
 
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not found' });
     }
 
-    res.status(200).json({ success: true, message: 'User deleted successfully' });
+    res
+      .status(200)
+      .json({ success: true, message: 'User deleted successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
-
-
-

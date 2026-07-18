@@ -3,10 +3,10 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
-import { verifyToken, authorizeRoles } from './middleware/authMiddleware.js';
+import { verifyToken, authorizeRoles } from './middlewares/authMiddleware.js';
 import authRoutes from './routes/authRoutes.js';
-import workspaceRoutes from './routes/workspaceRoute.js';
-import taskRoutes from './routes/taskRoute.js';
+import workspaceRoutes from './routes/workspaceRoutes.js';
+import taskRoutes from './routes/taskRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 
 dotenv.config();
