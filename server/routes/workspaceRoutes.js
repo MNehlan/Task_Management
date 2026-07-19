@@ -1,5 +1,5 @@
 import express from 'express';
-import { authorizeRoles, verifyToken } from '../middlewares/authMiddleware.js';
+import { authorizeRoles } from '../middlewares/authMiddleware.js';
 import {
   createWorkspace,
   deleteWorkspace,
@@ -15,47 +15,38 @@ import {
 
 const router = express.Router();
 
-router.get('/dashboard', verifyToken, getDashboard);
+router.get('/dashboard', getDashboard);
 
-router.post(
-  '/create',
-  verifyToken,
-  authorizeRoles('manager', 'admin'),
-  createWorkspace,
-);
+router.post('/create', authorizeRoles('manager', 'admin'), createWorkspace);
 
-router.get('/', verifyToken, getWorkspace);
+router.get('/', getWorkspace);
 
-router.get('/:workspaceId', verifyToken, getSingleWorkspace);
+router.get('/:workspaceId', getSingleWorkspace);
 
 router.delete(
   '/:workspaceId',
-  verifyToken,
   authorizeRoles('admin', 'manager'),
   deleteWorkspace,
 );
 router.patch(
   '/:workspaceId',
-  verifyToken,
   authorizeRoles('admin', 'manager'),
   updateWorkspace,
 );
 
-router.delete('/:workspaceId/leave', verifyToken, leaveWorkspace);
+router.delete('/:workspaceId/leave', leaveWorkspace);
 
 //member management route
 router.post(
   '/:workspaceId/members',
-  verifyToken,
   authorizeRoles('manager', 'admin'),
   inviteMember,
 );
 
-router.get('/:workspaceId/members', verifyToken, getWorkspaceMembers);
+router.get('/:workspaceId/members', getWorkspaceMembers);
 
 router.delete(
   '/:workspaceId/members/:userId',
-  verifyToken,
   authorizeRoles('manager', 'admin'),
   removeMember,
 );

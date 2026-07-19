@@ -1,5 +1,5 @@
 import express from 'express';
-import { authorizeRoles, verifyToken } from '../middlewares/authMiddleware.js';
+import { authorizeRoles } from '../middlewares/authMiddleware.js';
 import {
   createTask,
   deleteTask,
@@ -11,31 +11,16 @@ import {
 
 const router = express.Router();
 
-router.post(
-  '/create',
-  verifyToken,
-  authorizeRoles('manager', 'admin'),
-  createTask,
-);
+router.post('/create', authorizeRoles('manager', 'admin'), createTask);
 
-router.get('/workspace/:workspaceId', verifyToken, getTaskByWorkspace);
+router.get('/workspace/:workspaceId', getTaskByWorkspace);
 
-router.patch('/:taskId', verifyToken, updateTaskStatus);
+router.patch('/:taskId', updateTaskStatus);
 
-router.get('/:taskId', verifyToken, getTaskById);
+router.get('/:taskId', getTaskById);
 
-router.put(
-  '/:taskId',
-  verifyToken,
-  authorizeRoles('manager', 'admin'),
-  updateTask,
-);
+router.put('/:taskId', authorizeRoles('manager', 'admin'), updateTask);
 
-router.delete(
-  '/:taskId',
-  verifyToken,
-  authorizeRoles('manager', 'admin'),
-  deleteTask,
-);
+router.delete('/:taskId', authorizeRoles('manager', 'admin'), deleteTask);
 
 export default router;

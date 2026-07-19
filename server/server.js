@@ -9,6 +9,7 @@ import authRoutes from './routes/authRoutes.js';
 import workspaceRoutes from './routes/workspaceRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import { verifyToken } from './middlewares/authMiddleware.js';
 
 dotenv.config();
 
@@ -22,11 +23,11 @@ app.use(cors());
 
 // App Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/workspace', workspaceRoutes);
-app.use('/api/task', taskRoutes);
+app.use('/api/workspace', verifyToken, workspaceRoutes);
+app.use('/api/task', verifyToken, taskRoutes);
 
 // Admin Routes
-app.use('/api/admin', adminRoutes);
+app.use('/api/admin', verifyToken, adminRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI)
