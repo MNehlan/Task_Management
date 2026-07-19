@@ -19,7 +19,11 @@ const PORT = process.env.PORT;
 // Middlewares
 app.use(express.json());
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+  })
+);
 
 // App Routes
 app.use('/api/auth', authRoutes);
