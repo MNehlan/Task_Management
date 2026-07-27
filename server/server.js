@@ -14,6 +14,7 @@ import workspaceRoutes from './routes/workspaceRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import { verifyToken } from './middlewares/authMiddleware.js';
+import errorMiddleware from './middlewares/errorMiddleware.js';
 
 dotenv.config();
 
@@ -36,6 +37,8 @@ app.use('/api/task', verifyToken, taskRoutes);
 
 // Admin Routes
 app.use('/api/admin', verifyToken, adminRoutes);
+
+app.use(errorMiddleware)
 
 mongoose
   .connect(process.env.MONGO_URI)
