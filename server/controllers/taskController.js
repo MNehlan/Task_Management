@@ -160,6 +160,10 @@ export const updateTaskStatus = catchAsync(async (req, res) => {
     throw new AppError('Task not found', 404);
   }
 
+  if (!task.workspace) {
+    throw new AppError('Workspace associated with this task not found or deleted', 404);
+  }
+
   const isMember =
     req.user.role === 'admin' ||
     task.workspace.members.some((member) => member.toString() === req.user.id);
@@ -199,6 +203,10 @@ export const getTaskById = catchAsync(async (req, res) => {
     throw new AppError('Task not found', 404);
   }
 
+  if (!task.workspace) {
+    throw new AppError('Workspace associated with this task not found or deleted', 404);
+  }
+
   const canView =
     req.user.role === 'admin' ||
     task.workspace.members.some((member) => member.toString() === req.user.id);
@@ -225,6 +233,10 @@ export const updateTask = catchAsync(async (req, res) => {
 
   if (!task) {
     throw new AppError('Task not found', 404);
+  }
+
+  if (!task.workspace) {
+    throw new AppError('Workspace associated with this task not found or deleted', 404);
   }
 
   const canEdit =
