@@ -2,391 +2,314 @@ import validator from 'validator';
 import User from '../models/User.js';
 import Workspace from '../models/Workspace.js';
 import Task from '../models/Task.js';
+import catchAsync from '../utils/catchAsync.js';
+import AppError from '../utils/AppError.js';
 
-export const getDashboard = async (req, res) => {
-  try {
-    const workspaces = await Workspace.find({
-      members: req.user.id,
-    });
+export const getDashboard = catchAsync(async (req, res) => {
+  const workspaces = await Workspace.find({
+    members: req.user.id,
+  });
 
-    const workspaceIds = workspaces.map((workspace) => workspace._id);
+  const workspaceIds = workspaces.map((workspace) => workspace._id);
 
-    const tasks = await Task.find({
-      workspace: {
-        $in: workspaceIds,
-      },
-    });
+  const tasks = await Task.find({
+    workspace: {
+      $in: workspaceIds,
+    },
+  });
 
-    const completed = tasks.filter(
-      (task) => task.status === 'Completed',
-    ).length;
+  const completed = tasks.filter(
+    (task) => task.status === 'Completed',
+  ).length;
 
-    const todo = tasks.filter((task) => task.status === 'Todo').length;
+  const todo = tasks.filter((task) => task.status === 'Todo').length;
 
-    const inProgress = tasks.filter(
-      (task) => task.status === 'In Progress',
-    ).length;
+  const inProgress = tasks.filter(
+    (task) => task.status === 'In Progress',
+  ).length;
 
-    const review = tasks.filter((task) => task.status === 'Review').length;
+  const review = tasks.filter((task) => task.status === 'Review').length;
 
-    return res.status(200).json({
-      success: true,
-      stats: {
-        workspaces: workspaces.length,
-        tasks: tasks.length,
-        todo,
-        inProgress,
-        review,
-        completed,
-      },
-    });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+  return res.status(200).json({
+    success: true,
+    stats: {
+      workspaces: workspaces.length,
+      tasks: tasks.length,
+      todo,
+      inProgress,
+      review,
+      completed,
+    },
+  });
+});
+
+export const createWorkspace = catchAsync(async (req, res) => {
+  let { name, description } = req.body;
+
+  if (!name || !description) {
+    throw new AppError('All fields required', 400);
   }
-};
 
-export const createWorkspace = async (req, res) => {
-  try {
-    let { name, description } = req.body;
+  name = name.trim();
+  description = description.trim();
 
-    if (!name || !description) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'All fields required' });
-    }
-
-    name = name.trim();
-    description = description.trim();
-
-    if (validator.isEmpty(name) || validator.isEmpty(description)) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'All fields required' });
-    }
-
-    const existingWorkspace = await Workspace.findOne({
-      name,
-      owner: req.user.id,
-    });
-
-    if (existingWorkspace) {
-      return res
-        .status(409)
-        .json({ success: false, message: 'Workspace already exists' });
-    }
-
-    const workspace = await Workspace.create({
-      name,
-      description,
-      owner: req.user.id,
-      members: [req.user.id],
-    });
-
-    res.status(201).json({
-      success: true,
-      workspace,
-      message: 'Workspace created successfully',
-    });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+  if (validator.isEmpty(name) || validator.isEmpty(description)) {
+    throw new AppError('All fields required', 400);
   }
-};
 
-export const getWorkspace = async (req, res) => {
-  try {
-    const workspaces = await Workspace.find({ members: req.user.id });
+  const existingWorkspace = await Workspace.findOne({
+    name,
+    owner: req.user.id,
+  });
 
-    res.status(200).json({ success: true, workspaces });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+  if (existingWorkspace) {
+    throw new AppError('Workspace already exists', 409);
   }
-};
 
-export const getSingleWorkspace = async (req, res) => {
-  try {
-    const workspace = await Workspace.findById(req.params.workspaceId);
+  const workspace = await Workspace.create({
+    name,
+    description,
+    owner: req.user.id,
+    members: [req.user.id],
+  });
 
-    if (!workspace) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Workspace not found' });
-    }
+  res.status(201).json({
+    success: true,
+    workspace,
+    message: 'Workspace created successfully',
+  });
+});
 
-    const isMember = workspace.members.some(
-      (member) => member.toString() === req.user.id,
+export const getWorkspace = catchAsync(async (req, res) => {
+  const workspaces = await Workspace.find({ members: req.user.id });
+
+  res.status(200).json({ success: true, workspaces });
+});
+
+export const getSingleWorkspace = catchAsync(async (req, res) => {
+  const workspace = await Workspace.findById(req.params.workspaceId);
+
+  if (!workspace) {
+    throw new AppError('Workspace not found', 404);
+  }
+
+  const isMember = workspace.members.some(
+    (member) => member.toString() === req.user.id,
+  );
+
+  if (!isMember) {
+    throw new AppError('Access denied', 403);
+  }
+
+  res.status(200).json({ success: true, workspace });
+});
+
+export const deleteWorkspace = catchAsync(async (req, res) => {
+  const { workspaceId } = req.params;
+
+  const workspace = await Workspace.findById(workspaceId);
+  if (!workspace) {
+    throw new AppError('Workspace not found', 404);
+  }
+
+  const canDelete =
+    req.user.role === 'admin' || workspace.owner?.toString() === req.user.id;
+  if (!canDelete) {
+    throw new AppError('Access denied', 403);
+  }
+
+  await Task.deleteMany({ workspace: workspaceId });
+  await workspace.deleteOne();
+  res
+    .status(200)
+    .json({ success: true, message: 'Workspace deleted successfully' });
+});
+
+export const updateWorkspace = catchAsync(async (req, res) => {
+  const { workspaceId } = req.params;
+  const { name, description } = req.body;
+
+  const workspace = await Workspace.findById(workspaceId);
+  if (!workspace) {
+    throw new AppError('Workspace not found', 404);
+  }
+
+  const canUpdate =
+    req.user.role === 'admin' || workspace.owner?.toString() === req.user.id;
+  if (!canUpdate) {
+    throw new AppError('Access denied', 403);
+  }
+
+  const noChange =
+    (!name || name.trim() === workspace.name) &&
+    (!description || description.trim() === workspace.description);
+
+  if (noChange) {
+    throw new AppError('No changes detected', 400);
+  }
+
+  if (name) workspace.name = name.trim();
+  if (description) workspace.description = description.trim();
+
+  await workspace.save();
+
+  res.status(200).json({
+    success: true,
+    workspace: {
+      id: workspace._id,
+      name: workspace.name,
+      description: workspace.description,
+    },
+    message: 'Workspace updated successfully',
+  });
+});
+
+export const leaveWorkspace = catchAsync(async (req, res) => {
+  const { workspaceId } = req.params;
+
+  const workspace = await Workspace.findById(workspaceId);
+  if (!workspace) {
+    throw new AppError('Workspace not found', 404);
+  }
+
+  const isMember = workspace.members.some(
+    (member) => member.toString() === req.user.id,
+  );
+  if (!isMember) {
+    throw new AppError('Not a member of this workspace', 404);
+  }
+
+  if (workspace.owner?.toString() === req.user.id) {
+    throw new AppError('Owner cannot leave', 409);
+  }
+
+  const activeTasks = await Task.countDocuments({
+    workspace: workspaceId,
+    assignedTo: req.user.id,
+    status: { $ne: 'Completed' },
+  });
+
+  if (activeTasks > 0) {
+    throw new AppError(
+      'Complete or reassign your active tasks before leaving the workspace',
+      409,
     );
-
-    if (!isMember) {
-      return res.status(403).json({ success: false, message: 'Access denied' });
-    }
-
-    res.status(200).json({ success: true, workspace });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
   }
-};
 
-export const deleteWorkspace = async (req, res) => {
-  try {
-    const { workspaceId } = req.params;
+  workspace.members = workspace.members.filter(
+    (member) => member.toString() !== req.user.id,
+  );
+  await workspace.save();
 
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Workspace not found' });
-    }
+  res.status(200).json({ success: true, message: 'You left the workspace' });
+});
 
-    const canDelete =
-      req.user.role === 'admin' || workspace.owner?.toString() === req.user.id;
-    if (!canDelete) {
-      return res.status(403).json({ success: false, message: 'Access denied' });
-    }
-
-    await Task.deleteMany({ workspace: workspaceId });
-    await workspace.deleteOne();
-    res
-      .status(200)
-      .json({ success: true, message: 'Workspace deleted successfully' });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+// member management
+export const inviteMember = catchAsync(async (req, res) => {
+  const { workspaceId } = req.params;
+  let { email } = req.body;
+  if (!email) {
+    throw new AppError('Email is required', 400);
   }
-};
 
-export const updateWorkspace = async (req, res) => {
-  try {
-    const { workspaceId } = req.params;
-    const { name, description } = req.body;
+  email = email.trim().toLowerCase();
 
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-      return res.status(404).json({ success: false, message: 'Workspace not found' });
-    }
-
-    const canUpdate =
-      req.user.role === 'admin' || workspace.owner?.toString() === req.user.id;
-    if (!canUpdate) {
-      return res.status(403).json({ success: false, message: 'Access denied' });
-    }
-
-    const noChange =
-      (!name || name.trim() === workspace.name) &&
-      (!description || description.trim() === workspace.description);
-
-    if (noChange) {
-      return res.status(400).json({ success: false, message: 'No changes detected' });
-    }
-
-    if (name) workspace.name = name.trim();
-    if (description) workspace.description = description.trim();
-
-    await workspace.save();
-
-    res.status(200).json({
-      success: true,
-      workspace: {
-        id: workspace._id,
-        name: workspace.name,
-        description: workspace.description,
-      },
-      message: 'Workspace updated successfully',
-    });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+  if (!validator.isEmail(email)) {
+    throw new AppError('Invalid email format', 400);
   }
-};
 
-
-export const leaveWorkspace = async (req, res) => {
-  try {
-    const { workspaceId } = req.params;
-
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Workspace not found' });
-    }
-
-    const isMember = workspace.members.some(
-      (member) => member.toString() === req.user.id,
-    );
-    if (!isMember) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Not a member of this workspace' });
-    }
-
-    if (workspace.owner?.toString() === req.user.id) {
-      return res
-        .status(409)
-        .json({ success: false, message: 'Owner cannot leave' });
-    }
-
-    const activeTasks = await Task.countDocuments({
-      workspace: workspaceId,
-      assignedTo: req.user.id,
-      status: { $ne: 'Completed' },
-    });
-
-    if (activeTasks > 0) {
-      return res.status(409).json({
-        success: false,
-        message:
-          'Complete or reassign your active tasks before leaving the workspace',
-      });
-    }
-
-    workspace.members = workspace.members.filter(
-      (member) => member.toString() !== req.user.id,
-    );
-    await workspace.save();
-
-    res.status(200).json({ success: true, message: 'You left the workspace' });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+  const workspace = await Workspace.findById(workspaceId);
+  if (!workspace) {
+    throw new AppError('Workspace not found', 404);
   }
-};
 
-//member management
-export const inviteMember = async (req, res) => {
-  try {
-    const { workspaceId } = req.params;
-    let { email } = req.body;
-    if (!email) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Email is required' });
-    }
-
-    email = email.trim().toLowerCase();
-
-    if (!validator.isEmail(email)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid email format',
-      });
-    }
-
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Workspace not found' });
-    }
-
-    const canInvite =
-      req.user.role === 'admin' || workspace.owner?.toString() === req.user.id;
-    if (!canInvite) {
-      return res.status(403).json({ success: false, message: 'Access denied' });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'User not found' });
-    }
-
-    const isMember = workspace.members.some(
-      (member) => member.toString() === user._id.toString(),
-    );
-    if (isMember) {
-      return res
-        .status(409)
-        .json({ success: false, message: 'User is already a member' });
-    }
-
-    workspace.members.push(user._id);
-    await workspace.save();
-    res.status(200).json({
-      success: true,
-      member: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-      message: 'User added',
-    });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+  const canInvite =
+    req.user.role === 'admin' || workspace.owner?.toString() === req.user.id;
+  if (!canInvite) {
+    throw new AppError('Access denied', 403);
   }
-};
 
-export const getWorkspaceMembers = async (req, res) => {
-  try {
-    const { workspaceId } = req.params;
-
-    const workspace = await Workspace.findById(workspaceId).populate(
-      'members',
-      'name email role',
-    );
-    if (!workspace) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Workspace not found' });
-    }
-
-    const canView =
-      req.user.role === 'admin' ||
-      workspace.members.some((member) => member._id.toString() === req.user.id);
-    if (!canView) {
-      return res.status(403).json({ success: false, message: 'Access denied' });
-    }
-
-    res.status(200).json({ success: true, members: workspace.members });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new AppError('User not found', 404);
   }
-};
 
-export const removeMember = async (req, res) => {
-  try {
-    const { workspaceId, userId } = req.params;
-
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Workspace not found' });
-    }
-
-    const canRemove =
-      req.user.role === 'admin' || workspace.owner?.toString() === req.user.id;
-    if (!canRemove) {
-      return res.status(403).json({ success: false, message: 'Access denied' });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'User not found' });
-    }
-
-    if (workspace.owner?.toString() === userId) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Owner cannot be removed' });
-    }
-
-    const isMember = workspace.members.some(
-      (member) => member.toString() === userId,
-    );
-    if (!isMember) {
-      return res
-        .status(409)
-        .json({ success: false, message: 'User is not a member' });
-    }
-
-    workspace.members = workspace.members.filter(
-      (member) => member.toString() !== userId,
-    );
-    await workspace.save();
-
-    res.status(200).json({ success: true, message: 'Member removed' });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+  const isMember = workspace.members.some(
+    (member) => member.toString() === user._id.toString(),
+  );
+  if (isMember) {
+    throw new AppError('User is already a member', 409);
   }
-};
+
+  workspace.members.push(user._id);
+  await workspace.save();
+  res.status(200).json({
+    success: true,
+    member: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+    message: 'User added',
+  });
+});
+
+export const getWorkspaceMembers = catchAsync(async (req, res) => {
+  const { workspaceId } = req.params;
+
+  const workspace = await Workspace.findById(workspaceId).populate(
+    'members',
+    'name email role',
+  );
+  if (!workspace) {
+    throw new AppError('Workspace not found', 404);
+  }
+
+  const canView =
+    req.user.role === 'admin' ||
+    workspace.members.some((member) => member._id.toString() === req.user.id);
+  if (!canView) {
+    throw new AppError('Access denied', 403);
+  }
+
+  res.status(200).json({ success: true, members: workspace.members });
+});
+
+export const removeMember = catchAsync(async (req, res) => {
+  const { workspaceId, userId } = req.params;
+
+  const workspace = await Workspace.findById(workspaceId);
+  if (!workspace) {
+    throw new AppError('Workspace not found', 404);
+  }
+
+  const canRemove =
+    req.user.role === 'admin' || workspace.owner?.toString() === req.user.id;
+  if (!canRemove) {
+    throw new AppError('Access denied', 403);
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  if (workspace.owner?.toString() === userId) {
+    throw new AppError('Owner cannot be removed', 400);
+  }
+
+  const isMember = workspace.members.some(
+    (member) => member.toString() === userId,
+  );
+  if (!isMember) {
+    throw new AppError('User is not a member', 409);
+  }
+
+  workspace.members = workspace.members.filter(
+    (member) => member.toString() !== userId,
+  );
+  await workspace.save();
+
+  res.status(200).json({ success: true, message: 'Member removed' });
+});
