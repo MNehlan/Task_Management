@@ -77,6 +77,10 @@ export const createTask = catchAsync(async (req, res) => {
   }
 
   if (assignedTo) {
+    if (assignedTo === req.user.id) {
+      throw new AppError('You cannot assign a task to yourself. Please assign it to another workspace member.', 400);
+    }
+
     const user = await User.findById(assignedTo);
 
     if (!user) {
@@ -252,6 +256,10 @@ export const updateTask = catchAsync(async (req, res) => {
   }
 
   if (assignedTo) {
+    if (assignedTo === req.user.id) {
+      throw new AppError('You cannot assign a task to yourself. Please assign it to another workspace member.', 400);
+    }
+
     const user = await User.findById(assignedTo);
 
     if (!user) {

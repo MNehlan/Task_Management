@@ -8,6 +8,8 @@ const selectCls = "w-full px-4 py-2.5 rounded-xl bg-[#1a1a2e] border border-whit
 
 const TaskForm = ({ members, setEditingTask, editingTask, setTasks, onClose }) => {
   const { workspaceId } = useParams();
+  const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+
   const [taskForm, setTaskForm] = useState({
     title: '',
     description: '',
@@ -111,9 +113,11 @@ const TaskForm = ({ members, setEditingTask, editingTask, setTasks, onClose }) =
 
         <select name="assignedTo" value={taskForm.assignedTo} onChange={(e) => handleChange(e, setTaskForm)} className={`${selectCls} [colorscheme:dark]`}>
           <option value="" className="bg-[#1a1a2e] text-white">Unassigned</option>
-          {members.map((member) => (
-            <option key={member._id} value={member._id} className="bg-[#1a1a2e] text-white">{member.name}</option>
-          ))}
+          {members
+            .filter((member) => member._id !== currentUser?.id)
+            .map((member) => (
+              <option key={member._id} value={member._id} className="bg-[#1a1a2e] text-white">{member.name}</option>
+            ))}
         </select>
       </div>
 
