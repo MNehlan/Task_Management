@@ -12,6 +12,10 @@ const registerUser = catchAsync(async (req, res) => {
     throw new AppError('All fields required', 400);
   }
 
+  if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string') {
+    throw new AppError('Name, email, and password must be strings', 400);
+  }
+
   name = name.trim();
   email = email.toLowerCase().trim();
 
@@ -54,6 +58,10 @@ const loginUser = catchAsync(async (req, res) => {
 
   if (!email || !password) {
     throw new AppError('All fields required', 400);
+  }
+
+  if (typeof email !== 'string' || typeof password !== 'string') {
+    throw new AppError('Email and password must be strings', 400);
   }
 
   email = email.toLowerCase().trim();

@@ -53,6 +53,10 @@ export const createTask = catchAsync(async (req, res) => {
     throw new AppError('All fields required', 400);
   }
 
+  if (typeof title !== 'string' || typeof description !== 'string') {
+    throw new AppError('Title and description must be text strings', 400);
+  }
+
   title = title.trim();
   description = description.trim();
 
