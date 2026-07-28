@@ -31,11 +31,17 @@ export const getAllWorkspaces = catchAsync(async (req, res) => {
         id: ws._id,
         name: ws.name,
         description: ws.description,
-        owner: {
-          id: ws.owner._id,
-          name: ws.owner.name,
-          email: ws.owner.email,
-        },
+        owner: ws.owner
+          ? {
+              id: ws.owner._id,
+              name: ws.owner.name,
+              email: ws.owner.email,
+            }
+          : {
+              id: null,
+              name: 'Deleted User',
+              email: 'deleted@workspace.com',
+            },
         memberCount: ws.members.length,
         taskCount,
         createdAt: ws.createdAt,
@@ -69,17 +75,25 @@ export const getWorkspaceById = catchAsync(async (req, res) => {
       id: workspace._id,
       name: workspace.name,
       description: workspace.description,
-      owner: {
-        id: workspace.owner._id,
-        name: workspace.owner.name,
-        email: workspace.owner.email,
-      },
-      members: workspace.members.map((m) => ({
-        id: m._id,
-        name: m.name,
-        email: m.email,
-        role: m.role,
-      })),
+      owner: workspace.owner
+        ? {
+            id: workspace.owner._id,
+            name: workspace.owner.name,
+            email: workspace.owner.email,
+          }
+        : {
+            id: null,
+            name: 'Deleted User',
+            email: 'deleted@workspace.com',
+          },
+      members: workspace.members
+        .filter((m) => m !== null)
+        .map((m) => ({
+          id: m._id,
+          name: m.name,
+          email: m.email,
+          role: m.role,
+        })),
       tasks: tasks.map((task) => ({
         id: task._id,
         title: task.title,
@@ -94,11 +108,17 @@ export const getWorkspaceById = catchAsync(async (req, res) => {
               email: task.assignedTo.email,
             }
           : null,
-        createdBy: {
-          id: task.createdBy._id,
-          name: task.createdBy.name,
-          email: task.createdBy.email,
-        },
+        createdBy: task.createdBy
+          ? {
+              id: task.createdBy._id,
+              name: task.createdBy.name,
+              email: task.createdBy.email,
+            }
+          : {
+              id: null,
+              name: 'Deleted User',
+              email: 'deleted@workspace.com',
+            },
         createdAt: task.createdAt,
       })),
       createdAt: workspace.createdAt,
@@ -129,15 +149,26 @@ export const getAllTasks = catchAsync(async (req, res) => {
             email: task.assignedTo.email,
           }
         : null,
-      createdBy: {
-        id: task.createdBy._id,
-        name: task.createdBy.name,
-        email: task.createdBy.email,
-      },
-      workspace: {
-        id: task.workspace._id,
-        name: task.workspace.name,
-      },
+      createdBy: task.createdBy
+        ? {
+            id: task.createdBy._id,
+            name: task.createdBy.name,
+            email: task.createdBy.email,
+          }
+        : {
+            id: null,
+            name: 'Deleted User',
+            email: 'deleted@workspace.com',
+          },
+      workspace: task.workspace
+        ? {
+            id: task.workspace._id,
+            name: task.workspace.name,
+          }
+        : {
+            id: null,
+            name: 'Deleted Workspace',
+          },
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
     })),
@@ -173,15 +204,26 @@ export const getTaskById = catchAsync(async (req, res) => {
             email: task.assignedTo.email,
           }
         : null,
-      createdBy: {
-        id: task.createdBy._id,
-        name: task.createdBy.name,
-        email: task.createdBy.email,
-      },
-      workspace: {
-        id: task.workspace._id,
-        name: task.workspace.name,
-      },
+      createdBy: task.createdBy
+        ? {
+            id: task.createdBy._id,
+            name: task.createdBy.name,
+            email: task.createdBy.email,
+          }
+        : {
+            id: null,
+            name: 'Deleted User',
+            email: 'deleted@workspace.com',
+          },
+      workspace: task.workspace
+        ? {
+            id: task.workspace._id,
+            name: task.workspace.name,
+          }
+        : {
+            id: null,
+            name: 'Deleted Workspace',
+          },
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
     },
@@ -244,6 +286,27 @@ export const deleteUser = catchAsync(async (req, res) => {
   if (userId === req.user.id) {
     throw new AppError('You cannot delete your own account', 400);
   }
+
+  // Check if user owns any workspaces
+  const workspaceCount = await Workspace.countDocuments({ owner: userId });
+  if (workspaceCount > 0) {
+    throw new AppError(
+      'Cannot delete user. This user owns one or more workspaces. Please delete the workspaces or transfer ownership first.',
+      400,
+    );
+  }
+
+  // Remove the user from the members list of all workspaces
+  await Workspace.updateMany(
+    { members: userId },
+    { $pull: { members: userId } },
+  );
+
+  // Unassign tasks assigned to the user
+  await Task.updateMany(
+    { assignedTo: userId },
+    { $unset: { assignedTo: 1 } },
+  );
 
   const user = await User.findByIdAndDelete(userId);
 

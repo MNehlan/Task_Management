@@ -27,11 +27,20 @@ const toTaskDTO = (task) => ({
         name: task.createdBy.name,
         email: task.createdBy.email,
       }
-    : null,
-  workspace: {
-    id: task.workspace._id,
-    name: task.workspace.name,
-  },
+    : {
+        id: null,
+        name: 'Deleted User',
+        email: 'deleted@workspace.com',
+      },
+  workspace: task.workspace
+    ? {
+        id: task.workspace._id,
+        name: task.workspace.name,
+      }
+    : {
+        id: null,
+        name: 'Deleted Workspace',
+      },
   createdAt: task.createdAt,
   updatedAt: task.updatedAt,
 });
