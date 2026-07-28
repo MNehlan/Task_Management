@@ -1,5 +1,4 @@
 import express from 'express';
-import { authorizeRoles, verifyToken } from '../middleware/authMiddleware.js';
 import {
   getAdminDashboard,
   getAllWorkspaces,
@@ -9,24 +8,27 @@ import {
   getAllUsers,
   updateUserRole,
   deleteUser,
-} from '../controller/adminController.js';
+} from '../controllers/adminController.js';
+import { authorizeRoles } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
+router.use(authorizeRoles('admin'));
+
 // Dashboard
-router.get('/', verifyToken, authorizeRoles('admin'), getAdminDashboard);
+router.get('/', getAdminDashboard);
 
 // Workspaces
-router.get('/workspaces', verifyToken, authorizeRoles('admin'), getAllWorkspaces);
-router.get('/workspaces/:workspaceId', verifyToken, authorizeRoles('admin'), getWorkspaceById);
+router.get('/workspaces', getAllWorkspaces);
+router.get('/workspaces/:workspaceId', getWorkspaceById);
 
 // Tasks
-router.get('/tasks', verifyToken, authorizeRoles('admin'), getAllTasks);
-router.get('/tasks/:taskId', verifyToken, authorizeRoles('admin'), getTaskById);
+router.get('/tasks', getAllTasks);
+router.get('/tasks/:taskId', getTaskById);
 
 // Users
-router.get('/users', verifyToken, authorizeRoles('admin'), getAllUsers);
-router.patch('/users/:userId/role', verifyToken, authorizeRoles('admin'), updateUserRole);
-router.delete('/users/:userId', verifyToken, authorizeRoles('admin'), deleteUser);
+router.get('/users', getAllUsers);
+router.patch('/users/:userId/role', updateUserRole);
+router.delete('/users/:userId', deleteUser);
 
 export default router;

@@ -22,7 +22,10 @@ const workspaceSchema = mongoose.Schema(
       },
     ],
   },
-  { timestamps: true },
+  { timestamps: true }
 );
+
+workspaceSchema.index({ owner: 1 });
+workspaceSchema.index({ members: 1 });
 
 export default mongoose.model('Workspace', workspaceSchema);
