@@ -1,4 +1,4 @@
-import { handleChange } from '../utils/handlechange.js';
+import { handleChange } from '../utils/handleChange.js';
 
 const CreateWorkspaceForm = ({ form, setForm, onSubmit, loading, error }) => {
   return (

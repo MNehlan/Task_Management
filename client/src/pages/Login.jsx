@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/api';
-import { handleChange } from '../utils/handlechange.js';
+import { handleChange } from '../utils/handleChange.js';
 
 
 const Login = () => {
