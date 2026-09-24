@@ -1,7 +1,7 @@
 import { describe, it, vi, expect } from "vitest";
-import Workspace from "../models/Workspace";
-import User from "../models/User";
-import Task from "../models/Task";
+import Workspace from "../../../models/Workspace";
+import User from "../../../models/User";
+import Task from "../../../models/Task";
 import {
   createTask,
   deleteTask,
@@ -9,7 +9,7 @@ import {
   getTaskByWorkspace,
   updateTask,
   updateTaskStatus,
-} from "../controllers/taskController";
+} from "../../../controllers/taskController";
 
 describe("createTask", () => {
   it("should throw 400 when required fields are missing", async () => {

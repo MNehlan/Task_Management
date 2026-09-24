@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import generateToken from '../utils/generateToken.js';
+import generateToken from '../../../utils/generateToken.js';
 import jwt from 'jsonwebtoken';
 
 process.env.SECRET_KEY = 'test-secret-key';

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { loginLimiter } from "../middlewares/rateLimitMiddleware.js";
+import { loginLimiter } from "../../../middlewares/rateLimitMiddleware.js";
 
 describe("loginLimiter", () => {
   it("should allow requests within the limit", async () => {

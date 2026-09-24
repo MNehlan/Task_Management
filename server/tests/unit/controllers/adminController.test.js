@@ -1,7 +1,7 @@
 import { describe, it, vi, expect, afterEach } from "vitest";
-import Task from "../models/Task";
-import User from "../models/User";
-import Workspace from "../models/Workspace";
+import Task from "../../../models/Task";
+import User from "../../../models/User";
+import Workspace from "../../../models/Workspace";
 import {
   deleteUser,
   getAdminDashboard,
@@ -11,7 +11,7 @@ import {
   getTaskById,
   getWorkspaceById,
   updateUserRole,
-} from "../controllers/adminController";
+} from "../../../controllers/adminController";
 
 describe("getAdminDashboard", () => {
   it("should return dashboard statistics successfully", async () => {

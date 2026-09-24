@@ -9,10 +9,10 @@ import {
   inviteMember,
   getWorkspaceMembers,
   removeMember,
-} from "../controllers/workspaceController";
-import Workspace from "../models/Workspace";
-import Task from "../models/Task";
-import User from "../models/User";
+} from "../../../controllers/workspaceController";
+import Workspace from "../../../models/Workspace";
+import Task from "../../../models/Task";
+import User from "../../../models/User";
 
 describe("createWorkspace", () => {
   it("should pass an error to next when required fields are missing", async () => {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
-import { verifyToken, authorizeRoles } from "../middlewares/authMiddleware.js";
+import User from "../../../models/User.js";
+import { verifyToken, authorizeRoles } from "../../../middlewares/authMiddleware.js";
 
 process.env.SECRET_KEY = "test-secret-key";
 describe("verifyToken", () => {

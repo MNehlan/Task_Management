@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import bcrypt from "bcrypt";
-import User from "../models/User.js";
-import generateToken from "../utils/generateToken.js";
+import User from "../../../models/User.js";
+import generateToken from "../../../utils/generateToken.js";
 import {
   loginUser,
   registerUser,
   getMe,
-} from "../controllers/authController.js";
+} from "../../../controllers/authController.js";
 
-vi.mock("../utils/generateToken.js", () => ({
+vi.mock("../../../utils/generateToken.js", () => ({
   default: vi.fn(() => "fake-token"),
 }));
 

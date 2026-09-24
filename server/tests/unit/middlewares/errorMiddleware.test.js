@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import errorMiddleware from "../middlewares/errorMiddleware.js";
-import AppError from "../utils/AppError.js";
+import errorMiddleware from "../../../middlewares/errorMiddleware.js";
+import AppError from "../../../utils/AppError.js";
 
 describe("errorMiddleware", () => {
   it("should send the error status code and message", () => {
