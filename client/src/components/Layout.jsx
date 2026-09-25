@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import Navbar from './Navbar';
-import Sidebar from './Sidebar';
-import api from '../api/api.js';
+import { useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import Navbar from "./Navbar";
+import Sidebar from "./Sidebar";
+import api from "../api/api.js";
+import { reloadPage } from "../utils/reloadPage.js";
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -10,8 +11,8 @@ const Layout = () => {
   useEffect(() => {
     const syncUserSession = async () => {
       try {
-        const { data } = await api.get('/auth/me');
-        const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const { data } = await api.get("/auth/me");
+        const localUser = JSON.parse(localStorage.getItem("user") || "{}");
 
         // Sync local storage if data changes
         if (
@@ -19,13 +20,13 @@ const Layout = () => {
           localUser.name !== data.user.name ||
           localUser.email !== data.user.email
         ) {
-          localStorage.setItem('user', JSON.stringify(data.user));
-          window.location.reload(); // Force full reload to update role-based routing elements
+          localStorage.setItem("user", JSON.stringify(data.user));
+          reloadPage(); // Force full reload to update role-based routing elements
         }
       } catch {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        navigate('/login', { replace: true });
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login", { replace: true });
       }
     };
 

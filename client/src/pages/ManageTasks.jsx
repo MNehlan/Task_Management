@@ -183,12 +183,12 @@ const ManageTasks = () => {
                     <td className="px-6 py-4 font-semibold text-white truncate max-w-xs">{task.title}</td>
 
                     {/* Workspace */}
-                    <td className="px-6 py-4 text-white/60 truncate max-w-[120px]">
+                    <td className="px-6 py-4 text-white/60 truncate max-w-30">
                       {task.workspace?.name || '—'}
                     </td>
 
                     {/* Assignee */}
-                    <td className="px-6 py-4 text-white/60 truncate max-w-[120px]">
+                    <td className="px-6 py-4 text-white/60 truncate max-w-30">
                       {task.assignedTo?.name || 'Unassigned'}
                     </td>
 
