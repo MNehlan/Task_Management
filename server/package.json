@@ -5,6 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest",
+    "test:unit": "vitest run --exclude \"tests/integration/**/*.test.js\"",
+    "test:integration": "vitest run --config vitest.integration.config.js",
+    "test:all": "npm run test:unit && npm run test:integration",
     "start": "nodemon server.js",
     "dev": "node server.js"
   },

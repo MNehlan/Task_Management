@@ -1,9 +1,8 @@
-import { beforeAll, afterEach, afterAll } from "vitest";
+import { beforeAll, afterEach } from "vitest";
 
 import {
   connectTestDB,
   clearTestDB,
-  closeTestDB,
 } from "../../config/testDb.js";
 
 beforeAll(async () => {
@@ -12,8 +11,4 @@ beforeAll(async () => {
 
 afterEach(async () => {
   await clearTestDB();
-});
-
-afterAll(async () => {
-  await closeTestDB();
 });

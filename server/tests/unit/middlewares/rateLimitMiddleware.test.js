@@ -1,8 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
-import { loginLimiter } from "../../../middlewares/rateLimitMiddleware.js";
+import { createLoginLimiter } from "../../../middlewares/rateLimitMiddleware.js";
 
 describe("loginLimiter", () => {
   it("should allow requests within the limit", async () => {
+    const loginLimiter = createLoginLimiter(5);
+
     const req = {
       ip: "127.0.0.1",
       app: {
@@ -27,6 +29,8 @@ describe("loginLimiter", () => {
   });
 
   it("should reject the request after the limit is exceeded", async () => {
+    const loginLimiter = createLoginLimiter(5);
+
     const req = {
       ip: "127.0.0.2",
       app: {
