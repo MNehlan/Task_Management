@@ -57,3 +57,12 @@ jobs:
 
       - name: Run tests
         run: npm run test:all
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [client, server]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Render
+        run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
